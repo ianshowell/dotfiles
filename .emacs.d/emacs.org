@@ -91,7 +91,7 @@
 ** Font: Default Input Mono Narrow
 #+BEGIN_SRC emacs-lisp
   (set-face-attribute 'default nil :family "Input Mono Narrow")
-  (set-face-attribute 'default nil :height 115)
+  (set-face-attribute 'default nil :height 130)
   ;; (set-face-attribute 'default nil :weight 'light)
 #+END_SRC
 
@@ -207,15 +207,17 @@
 
 ** Projectile: Project navigation
 #+BEGIN_SRC emacs-lisp
-(use-package projectile
-  :commands (projectile-global-mode)
-  :ensure t
-  :init
-  (projectile-global-mode)
-  :config
-  (setq projectile-remember-window-configs t)
-  (setq projectile-completion-system 'helm)
-  (setq projectile-switch-project-action 'helm-projectile))
+  (use-package projectile
+    :commands (projectile-global-mode)
+    :ensure t
+    :init
+    (projectile-global-mode)
+    (projectile-mode +1)
+    (define-key projectile-mode-map(kbd "C-c C-p") 'projectile-command-map)
+    :config
+    (setq projectile-remember-window-configs t)
+    (setq projectile-completion-system 'helm)
+    (setq projectile-switch-project-action 'helm-projectile))
 #+END_SRC
 
 ** Which-key: Help for key combinations
@@ -484,6 +486,11 @@ rns the path to it."
   (setq indent-tabs-mode nil)
   (setq tab-width (default-value 'tab-width))))
 #+END_SRC
+** JSON
+*** Json Mode
+#+BEGIN_SRC emacs-lisp
+(use-package json-mode)
+#+END_SRC
 
 
 * Global Key Binds
@@ -526,8 +533,8 @@ rns the path to it."
 #+END_SRC
 ** Disable C-xC-c (usually quits emacs).  Issue kill command through M-x.
 #+BEGIN_SRC emacs-lisp
-(dolist (key '("\C-x\C-c"))
-  (global-unset-key key))
+  ;; (dolist (key '("\C-x\C-c"))
+  ;;   (global-unset-key key))
 #+END_SRC
 
 

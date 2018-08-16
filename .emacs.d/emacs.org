@@ -1,0 +1,668 @@
+#+TITLE: Emacs Org-Babel Config
+#+AUTHOR: Tony Schneider
+#+EMAIL: aschneid@huskers.unl.edu
+
+* Environment Options
+** OS X setup
+*** Ensures PATH in eshell and user shell are the same
+#+BEGIN_SRC emacs-lisp
+(if (and (eq system-type 'darwin) (featurep 'ns))
+  (progn
+      (use-package exec-path-from-shell
+      :ensure t
+      :init (exec-path-from-shell-initialize))))
+#+END_SRC
+*** Makes both command and option meta key
+#+BEGIN_SRC emacs-lisp
+(if (and (eq system-type 'darwin) (featurep 'ns))
+    (progn
+      (setq mac-command-modifier 'meta)
+      (setq mac-option-modifier 'meta))
+  (progn))
+#+END_SRC
+*** Use apple script to launch new frames, but hides last frame instead of killing it (for server mode)
+#+BEGIN_SRC emacs-lisp
+(if (and (eq system-type 'darwin) (featurep 'ns))
+    (progn
+      (defun ns-raise-emacs ()
+        "Raise Emacs."
+        (do-applescript "tell application \"Emacs\" to activate"))
+      (defadvice handle-delete-frame (around my-handle-delete-frame-advice activate)
+        "Hide Emacs instead of closing the last frame"
+        (let ((frame   (posn-window (event-start event)))
+              (numfrs  (length (frame-list))))
+          (if (> numfrs 1)
+            ad-do-it
+            (do-applescript "tell application \"System Events\" to tell process \"Emacs\" to set visible to false"))))
+        (if (display-graphic-p)
+            (progn
+              (add-hook 'server-visit-hook 'ns-raise-emacs)
+              (add-hook 'before-make-frame-hook 'ns-raise-emacs)
+              (ns-raise-emacs)))))
+#+END_SRC
+
+
+* Display Options
+** Turn off menu bar, tool bar, and scroll
+#+BEGIN_SRC emacs-lisp
+(menu-bar-mode -1)
+(tool-bar-mode -1)
+;(scroll-bar-mode -1)
+#+END_SRC
+** Use Powerline for modeline display
+#+BEGIN_SRC emacs-lisp
+(use-package powerline :ensure t)
+(powerline-default-theme)
+#+END_SRC
+** Indentation
+#+BEGIN_SRC emacs-lisp
+(setq-default indent-tabs-mode nil)
+(setq-default tab-width 4)
+#+END_SRC
+** Themes: Default Solarized
+*** Some prerequisites (dash and s)
+#+BEGIN_SRC emacs-lisp
+(use-package dash
+  :ensure t)
+(use-package s
+  :ensure t)
+#+END_SRC
+*** Load themes and use Solarized by default
+#+BEGIN_SRC emacs-lisp
+(use-package solarized-theme :ensure t :no-require t)
+(setq current-theme 'solarized-dark)
+(load-theme current-theme t)
+
+(-each
+    (-map
+     (lambda (item)
+       (format "~/.emacs.d/elpa/%s" item))
+     (-filter
+      (lambda (item) (s-contains? "theme" item))
+      (directory-files "~/.emacs.d/elpa/")))
+  (lambda (item)
+    (add-to-list 'custom-theme-load-path item)))
+
+(add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
+
+#+END_SRC
+
+
+** Font: Default Input Mono Narrow
+#+BEGIN_SRC emacs-lisp
+  (set-face-attribute 'default nil :family "Input Mono Narrow")
+  (set-face-attribute 'default nil :height 115)
+  ;; (set-face-attribute 'default nil :weight 'light)
+#+END_SRC
+
+
+* General Packages
+** Diminish: Can be instead of require (or in use-package) to hide modes fron the modeline
+#+BEGIN_SRC emacs-lisp
+(use-package diminish :ensure t)
+#+END_SRC
+** Yasnippet: templating commonly used text
+#+BEGIN_SRC emacs-lisp
+(use-package yasnippet :ensure t)
+#+END_SRC
+** Bind-key: Used in use-package :bind keyword)
+#+BEGIN_SRC emacs-lisp
+(use-package bind-key :ensure t)
+#+END_SRC
+** eshell: used as default shell (integrates with emacs better than default)
+#+BEGIN_SRC emacs-lisp
+(use-package eshell :ensure t
+  :bind ("C-x C-u" . eshell))
+
+(defun eshell-clear-buffer ()
+  "Clear terminal"
+  (interactive)
+  (let ((inhibit-read-only t))
+    (erase-buffer)
+    (eshell-send-input)))
+(add-hook 'eshell-mode-hook
+      '(lambda()
+          (local-set-key (kbd "C-l") 'eshell-clear-buffer)))
+
+#+END_SRC
+** git-timemachine: View previous git commit in a buffer
+#+BEGIN_SRC emacs-lisp
+(use-package git-timemachine :ensure t)
+#+END_SRC
+** magit: Use emacs for managing commits and statuses
+#+BEGIN_SRC emacs-lisp
+(use-package magit :ensure t)
+#+END_SRC
+** Undo-tree: Visualization for the Emacs undo tree
+#+BEGIN_SRC emacs-lisp
+(use-package undo-tree
+  :ensure t
+  :diminish undo-tree-mode
+  :init
+  (global-undo-tree-mode)
+  (setq undo-tree-visualizer-timestamps t)
+  (setq undo-tree-visualizer-diff t))
+#+END_SRC
+
+** Helm: File navigation and search.  Integration with projectile for project management.
+#+BEGIN_SRC emacs-lisp
+  (use-package helm
+    :ensure t
+    :bind (("M-x"     . helm-M-x)
+           ("C-x C-b" . helm-buffers-list)
+           ("C-x C-f" . helm-find-files))
+    :init
+    (progn
+      (require 'helm-config)
+      (use-package helm-misc)
+      (use-package helm-mode)
+      (use-package helm-buffers)
+      (use-package helm-files)
+      (use-package helm-locate)
+      (use-package helm-bookmark)
+      (use-package helm-ring
+        :bind (("M-y"     . helm-show-kill-ring)))
+      (setq helm-quick-update t
+            helm-bookmark-show-location t
+            helm-buffers-fuzzy-matching t
+            helm-input-idle-delay 0.01)
+
+      (defun malb/helm-omni (&rest arg)
+        ;; just in case someone decides to pass an argument, helm-omni won't fail.
+        (interactive)
+        (helm-other-buffer
+         (append ;; projectile errors out if you're not in a project
+          (if (projectile-project-p) ;; so look before you leap
+              '(helm-source-projectile-buffers-list
+                helm-c-source-buffers-list)
+            '(helm-c-source-buffers-list)) ;; list of all open buffers
+
+          (if (projectile-project-p)
+              '(helm-source-projectile-recentf-list
+                helm-c-source-recentf)
+            '(helm-c-source-recentf)) ;; all recent files
+
+          (if (projectile-project-p)
+              '(helm-source-projectile-files-list
+                helm-c-source-files-in-current-dir)
+            '(helm-c-source-files-in-current-dir)) ;; files in current directory
+
+          '(helm-c-source-locate               ;; file anywhere
+            helm-c-source-bookmarks            ;; bookmarks too
+            helm-c-source-buffer-not-found     ;; ask to create a buffer otherwise
+            )) "*helm-omni*"))
+
+      (define-key helm-map (kbd "<tab>") 'helm-execute-persistent-action) ; rebind tab to do persistent action
+      (define-key helm-map (kbd "C-i") 'helm-execute-persistent-action) ; make TAB works in terminal
+      (define-key helm-map (kbd "C-z")  'helm-select-action) ; list actions using C-z
+      ))
+
+  (use-package helm-swoop
+    :ensure t
+    :bind (("C-c C-SPC" . helm-swoop)
+           ("C-c o" . helm-multi-swoop-all)
+           ("C-s"   . helm-swoop)
+           ("C-r"   . helm-resume)))
+#+END_SRC
+
+** Projectile: Project navigation
+#+BEGIN_SRC emacs-lisp
+(use-package projectile
+  :commands (projectile-global-mode)
+  :ensure t
+  :init
+  (projectile-global-mode)
+  :config
+  (setq projectile-remember-window-configs t)
+  (setq projectile-completion-system 'helm)
+  (setq projectile-switch-project-action 'helm-projectile))
+#+END_SRC
+
+** Which-key: Help for key combinations
+#+BEGIN_SRC emacs-lisp
+  (use-package which-key
+      :ensure t
+      :diminish which-key-mode
+      :config
+      (which-key-mode))
+#+END_SRC
+
+** Lang-tool for checking grammar
+#+BEGIN_SRC emacs-lisp
+  (use-package langtool
+    :ensure t
+    :config (setq langtool-language-tool-jar "~/.emacs.d/langtool/languagetool-commandline.jar"))
+#+END_SRC
+
+
+* Programming Configurations
+** Code folding using Origami
+#+BEGIN_SRC emacs-lisp
+(use-package origami :ensure t
+  :bind (("C-c f o"   . origami-open-node-recursively))
+  :bind (("C-c f t"   . origami-recursively-toggle-node))
+  :bind (("C-c f c"   . origami-close-node-recursively))
+  :bind (("C-c f a c"   . origami-close-all-nodes))
+  :bind (("C-c f a o"   . origami-open-all-nodes)))
+#+END_SRC
+** Clang format function: Use clang format on save to format file
+#+BEGIN_SRC emacs-lisp
+(defun clang-format-before-save ()
+  (interactive)
+  (when (eq major-mode 'c++-mode) (clang-format-buffer)))
+(add-hook 'before-save-hook 'clang-format-before-save)
+#+END_SRC
+
+** Compilation Configurationfunctions
+*** Compilation Buffer Options
+#+BEGIN_SRC emacs-lisp
+(setq compilation-scroll-output 1) ;; automatically scroll the compilation window
+(setq compilation-window-height 5) ;; Set the compilation window height
+#+END_SRC
+
+*** Closest Pathname defun: Iterates up directory tree until it finds the first makefile
+#+BEGIN_SRC emacs-lisp
+(require 'cl)
+(defun* get-closest-pathname (&optional (file "Makefile"))
+  "This function walks up the current path until it finds Makefile and then retu
+rns the path to it."
+  (let ((root (expand-file-name "/")))
+    (setq location (loop
+                    for d = default-directory then (expand-file-name ".." d)
+                    if (file-exists-p (expand-file-name file d))
+                    return d
+                    if (equal d root)
+                    return nil))
+    (if (eq location nil)
+        location
+      (expand-file-name file location))))
+#+END_SRC
+
+*** Compilation finish messages: Sets message for compilation buffer and dimsisses window if error-free
+#+BEGIN_SRC emacs-lisp
+(setq compilation-finish-function ;; Auto-dismiss compilation buffer.
+      (lambda (buf str)
+        (if (string-match "exited abnormally" str)
+            (message "compilation errors, press F9 to visit")
+          ;;no errors, make the compilation window go away after 2.5 sec
+          (message "No compilation errors!"))))
+#+END_SRC
+
+*** C/C++ Compilation Defuns
+#+BEGIN_SRC emacs-lisp
+(defun my-compile-func-debug ()
+  "This function does a compile."
+  (interactive)
+  (let ((dir (get-closest-pathname)))
+    (if (eq dir nil)
+        (progn
+          (setq compile-command "g++ *.c *.cpp")
+          (call-interactively 'compile))
+      (compile (format "cd %s; make -j 7" (file-name-directory (get-closest-pathname)))))))
+
+(defun my-compile-func-release ()
+  "This function does a compile."
+  (interactive)
+  (let ((dir (get-closest-pathname)))
+    (if (eq dir nil)
+        (progn
+          (setq compile-command "g++ *.c *.cpp")
+          (call-interactively 'compile))
+      (compile (format "cd %s; make -j 7 config=release" (file-name-directory (get-closest-pathname)))))))
+
+(defun my-compile-func-clean-release ()
+  "This function does a clean compile."
+  (interactive)
+  (compile (format "cd %s; make clean config=release" (file-name-directory (get-closest-pathname)))))
+
+(defun my-compile-func-clean-debug ()
+  "This function does a clean compile."
+  (interactive)
+  (compile (format "cd %s; make clean config=debug" (file-name-directory (get-closest-pathname)))))
+
+(defun my-compile-func-tests ()
+  "This function does a clean compile."
+  (interactive)
+  (compile (format "cd %s; make config=gtests -j 7" (file-name-directory (get-closest-pathname)))))
+#+END_SRC
+
+** Fic-mode: Highlights TODO, FIXME, BUG, and KLUDGE in buffer
+#+BEGIN_SRC emacs-lisp
+(use-package fic-mode :ensure t)
+#+END_SRC
+
+** Irony: Replaces CEDET to add inline compilation errors and code completion
+*** Flycheck - Compiles on save.  Navigate errors with F8 and F9.
+#+BEGIN_SRC emacs-lisp
+(use-package flycheck
+  :ensure t
+  :commands global-flycheck-mode
+  :bind (("<f9>" . flycheck-next-error)
+         ("<f8>" . flycheck-previous-error))
+
+
+  :config
+  (use-package flycheck-pos-tip :ensure t :config (flycheck-pos-tip-mode))
+  (setq flycheck-check-syntax-automatically '(save mode-enabled))
+  (setq flycheck-standard-error-navigation nil)
+  ;; flycheck errors on a tooltip (doesnt work on console)
+  (when (display-graphic-p (selected-frame))
+    (eval-after-load 'flycheck
+      '(custom-set-variables
+        '(flycheck-display-errors-function #'flycheck-pos-tip-error-messages)))
+    ))
+
+(use-package flycheck-irony :ensure t)
+#+END_SRC
+*** Irony - Code completion and compilation checking backend.
+#+BEGIN_SRC emacs-lisp
+(use-package irony
+  :ensure t
+  :diminish irony-mode
+  :defer t
+  :init
+  :config (progn
+            ;; replace the `completion-at-point' and `complete-symbol' bindings in
+            ;; irony-mode's buffers by irony-mode's function
+            (defun my-irony-mode-hook ()
+              (define-key irony-mode-map [remap completion-at-point]
+                'irony-completion-at-point-async)
+              (define-key irony-mode-map [remap complete-symbol]
+                'irony-completion-at-point-async))
+                                        ;(irony-eldoc 1))
+            (add-hook 'irony-mode-hook 'my-irony-mode-hook)
+            (add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options)
+
+            (eval-after-load 'flycheck
+              '(add-hook 'flycheck-mode-hook #'flycheck-irony-setup)))
+#+END_SRC
+*** Company mode - Code completion front end.  Use C-; to complete at cursor.
+#+BEGIN_SRC emacs-lisp
+(use-package company
+  :ensure t
+  :diminish company-mode
+  :defer t
+  :init (add-hook 'after-init-hook 'global-company-mode)
+  :config
+  (use-package company-irony :ensure t :defer t)
+  (use-package company-c-headers :ensure t :defer t)
+  (setq company-idle-delay              5
+        company-minimum-prefix-length   2
+        company-show-numbers            t
+        company-tooltip-limit           40
+        company-dabbrev-downcase        nil
+        company-backends                '((company-irony))
+        )
+  :bind ("C-;" . company-complete-common))
+#+END_SRC
+
+** C
+*** Add hooks for fic-mode (for TODO, FIXME, BUG, and KLUDGE highlighting)
+#+BEGIN_SRC emacs-lisp
+(add-hook 'c-mode-hook #'fic-mode)
+(add-hook 'c-mode-hook 'irony-mode)
+#+END_SRC
+
+*** Indentation and Formatting
+#
+(setq c-default-style "linux" c-basic-offset 4)
+(c-set-offset 'inline-open 0)
+(add-hook 'c-mode-hook
+          (function (lambda ()
+                      (setq defun-block-intro 0)
+                      (local-set-key (kbd "<f4>") 'my-compile-func-tests)
+                      (local-set-key (kbd "<f5>") 'my-compile-func-debug)
+                      (local-set-key (kbd "<f6>") 'my-compile-func-release)
+                      (setq indent-tabs-mode t)
+                      (toggle-truncate-lines 1)
+                      (setq c-indent-level 4)
+                      (linum-mode 1))))
+#+END_SRC
+
+** C++
+*** Indentation and Formatting
+#+BEGIN_SRC emacs-lisp
+(add-to-list 'auto-mode-alist '("\\.h\\'" . c++-mode))
+(add-hook 'c++-mode-hook
+          (function (lambda ()
+                      (linum-mode 1)
+                      (local-set-key (kbd "<f4>") 'my-compile-func-tests)
+                      (local-set-key (kbd "<f5>") 'my-compile-func-debug)
+                      (local-set-key (kbd "<f6>") 'my-compile-func-release)
+                      (toggle-truncate-lines 1)
+                      (setq indent-tabs-mode t)
+                      (setq defun-block-intro 0)
+                      (setq c-indent-level 4))))
+
+
+#+END_SRC
+*** Clang-format: A package for running clang-format on buffers
+#+BEGIN_SRC emacs-lisp
+(use-package clang-format :ensure t)
+#+END_SRC
+*** Add hooks for fic-mode (for TODO, FIXME, BUG, and KLUDGE highlighting)
+#+BEGIN_SRC emacs-lisp
+(add-hook 'c++-mode-hook #'fic-mode)
+#+END_SRC
+*** Add hooks for irony, company, and flycheck
+#+BEGIN_SRC emacs-lisp
+(add-hook 'c++-mode-hook 'irony-mode)
+(add-hook 'c++-mode-hook 'company-mode)
+(add-hook 'c++-mode-hook 'flycheck-mode)
+#+END_SRC
+
+*** Add hook for code folding
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'c++-mode-hook 'origami-mode))
+#+END_SRC
+*** C++11/17 keyword updates
+#+BEGIN_SRC emacs-lisp
+(use-package modern-cpp-font-lock
+:ensure t
+:init
+(add-hook 'c++-mode-hook #'modern-c++-font-lock-mode))
+#+END_SRC
+
+*** Compilation commands
+** QML
+*** Show line numbers
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'qml-mode-hook
+              (function (lambda ()
+                        (linum-mode 1))))
+#+END_SRC
+** Lua
+*** Enable lua mode
+#+BEGIN_SRC emacs-lisp
+(use-package lua-mode :ensure t)
+#+END_SRC
+** Python
+*** Indentation
+#+BEGIN_SRC emacs-lisp
+(add-hook 'python-mode-hook
+(lambda ()
+  (setq indent-tabs-mode nil)
+  (setq tab-width (default-value 'tab-width))))
+#+END_SRC
+
+
+* Global Key Binds
+** Change suspend to C-z C-z in terminal, and disable completely for GUI
+#+BEGIN_SRC emacs-lisp
+(global-unset-key (kbd "C-z"))
+(global-set-key (kbd "C-z C-z") 'my-suspend-frame)
+
+(defun my-suspend-frame ()
+  "In a GUI environment, do nothing; otherwise `suspend-frame'."
+  (interactive)
+  (if (display-graphic-p)
+      (message "suspend-frame disabled for graphical displays.")
+    (suspend-frame)))
+#+END_SRC
+** Use <F1> to switch between open emacs frames
+#+BEGIN_SRC emacs-lisp
+(global-set-key (kbd "<f1>") 'other-frame)
+#+END_SRC
+** Use <F7> to enter magit-status screen for buffers under git control
+#+BEGIN_SRC emacs-lisp
+(global-set-key (kbd "<f7>") 'magit-status)
+#+END_SRC
+** Use C-+ and C-- to enlarge or shrink font size
+#+BEGIN_SRC emacs-lisp
+(define-key global-map (kbd "C-+") 'text-scale-increase)
+(define-key global-map (kbd "C--") 'text-scale-decrease)
+#+END_SRC
+** Use <F11> to toggle full screen mode
+#+BEGIN_SRC emacs-lisp
+(defun toggle-fullscreen (&optional f)
+  (interactive)
+  (let ((current-value (frame-parameter nil 'fullscreen)))
+    (set-frame-parameter nil 'fullscreen
+      (if (equal 'fullboth current-value)
+    (if (boundp 'old-fullscreen) old-fullscreen nil)
+    (progn (setq old-fullscreen current-value)
+      'fullboth)))))
+      (global-set-key [f11] 'toggle-fullscreen)
+#+END_SRC
+** Disable C-xC-c (usually quits emacs).  Issue kill command through M-x.
+#+BEGIN_SRC emacs-lisp
+(dolist (key '("\C-x\C-c"))
+  (global-unset-key key))
+#+END_SRC
+
+
+* Save Options
+** Create the autosave dir if necessary
+#+BEGIN_SRC emacs-lisp
+(make-directory (expand-file-name "~/.emacs.d/autosaves/") t)
+#+END_SRC
+** Force backups and autosaves into the autosave directory
+#+BEGIN_SRC emacs-lisp
+(setq backup-by-copying t      ; don't clobber symlinks
+      backup-directory-alist '(("." . "~/.emacs.d/autosaves/"))    ; don't litter my fs tree
+      delete-old-versions t
+      kept-new-versions 6
+      kept-old-versions 2
+      version-control t)       ; use versioned backups
+(setq auto-save-file-name-transforms `((".*" "~/.emacs.d/autosaves/" t)))
+#+END_SRC
+** Remove extraneous whitespace from files on save
+#+BEGIN_SRC emacs-lisp
+(add-hook 'before-save-hook 'whitespace-cleanup)
+#+END_SRC
+
+
+* Latex Options
+** Gets the tex package and sets up Auctex with pdf mode, flyspell, and inline math
+#+BEGIN_SRC emacs-lisp
+(use-package tex
+  :defer t
+  :ensure auctex
+  :config
+  (setq Tex-save-query nil)
+  (setq TeX-PDF-mode t)
+  (setq TeX-auto-save t)
+  (setq TeX-parse-self t)
+  (setq-default TeX-master nil)
+  (add-hook 'LaTeX-mode-hook 'auto-fill-mode)
+  (add-hook 'LaTeX-mode-hook 'flyspell-mode)
+  (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
+  (add-hook 'LaTeX-mode-hook 'turn-on-reftex)
+  (setq reftex-plug-into-AUCTeX t))
+#+END_SRC
+
+
+* Org Mode Options
+** Ensure Org is installed and enable mouse support
+#+BEGIN_SRC emacs-lisp
+  (use-package org
+    :ensure t
+    :config
+    (setq org-agenda-skip-scheduled-if-done t)
+    (setq org-log-done t)
+    (require 'org-mouse)
+    :bind (("C-c t" . org-agenda-timeline-all)))
+#+END_SRC
+** Add auto-fill and flyspell by default for latex files
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'LaTeX-mode-hook 'auto-fill-mode)
+  (add-hook 'LaTeX-mode-hook 'flyspell-mode)
+#+END_SRC
+** Make code blocks pretty and indentable
+#+BEGIN_SRC emacs-lisp
+  (setq org-src-fontify-natively t)
+  (setq org-src-tab-acts-natively t)
+#+END_SRC
+** Open org files with appropriate indentation
+#+BEGIN_SRC emacs-lisp
+  (setq org-startup-indented 1)
+#+END_SRC
+** Time clock functions and options
+#+BEGIN_SRC emacs-lisp
+  (defun org-agenda-timeline-all (&optional arg)
+    (interactive "P")
+    (with-temp-buffer
+      (dolist (org-agenda-file org-agenda-files)
+        (insert-file-contents org-agenda-file nil)
+        (end-of-buffer)
+        (newline))
+      (write-file "/tmp/timeline.org")
+      (org-agenda arg "L")))
+  (setq org-todo-keywords
+        '((sequence "TODO(t)" "IN-PROGRESS(p)" "WAITING(w)" "|" "DONE(d)" "CANCELED(c)")))
+  (setq org-clock-persist 'history)
+  (org-clock-persistence-insinuate)
+  (setq org-clock-idle-time 15)
+  (setq org-clock-into-drawer "TIME CLOCK")
+
+  (defun wicked/org-clock-in-if-starting ()
+    "Clock in when the task is marked STARTED."
+    (when (and (string= org-state "IN-PROGRESS")
+               (not (string= org-last-state org-state)))
+      (org-clock-in)))
+  (add-hook 'org-after-todo-state-change-hook
+            'wicked/org-clock-in-if-starting)
+  (defadvice org-clock-in (after wicked activate)
+    "Set this task's status to 'IN-PROGRESS'."
+    (org-todo "IN-PROGRESS"))
+  (defun wicked/org-clock-out-if-waiting ()
+    "Clock out when the task is marked WAITING."
+    (when (and (or (string= org-state "WAITING") (string= org-state "DONE") (string= org-state "CANCELED"))
+               (equal (marker-buffer org-clock-marker) (current-buffer))
+               (< (point) org-clock-marker)
+               (> (save-excursion (outline-next-heading) (point))
+                  org-clock-marker)
+               (not (string= org-last-state org-state)))
+      (org-clock-out)))
+  (add-hook 'org-after-todo-state-change-hook
+            'wicked/org-clock-out-if-waiting)
+#+END_SRC
+
+
+* Miscellaneous Options
+** Revert buffers automatically if changed by outside emacs
+#+BEGIN_SRC emacs-lisp
+(global-auto-revert-mode t)
+#+END_SRC
+** Automatically encrypt and decrypt files with .gpg extension
+#+BEGIN_SRC emacs-lisp
+(setq epa-file-name-regexp "\\.gpg\\(~\\|\\.~[0-9]+~\\)?\\'\\|\\.asc")
+#+END_SRC
+** Completely disable bell
+#+BEGIN_SRC emacs-lisp
+(setq ring-bell-function 'ignore)
+#+END_SRC
+** Necessary for emacsclient.  Reloads theme in new frames.
+#+BEGIN_SRC emacs-lisp
+(if (daemonp)
+  (add-hook 'after-make-frame-functions
+    (lambda (frame)
+    (with-selected-frame frame
+    (load-theme current-theme t))))
+  (load-theme current-theme t))
+#+END_SRC
+
+** Move custom options from .emacs file to .custom.el
+#+BEGIN_SRC emacs-lisp
+(setq custom-file "~/.emacs.d/custom.el")
+#+END_SRC

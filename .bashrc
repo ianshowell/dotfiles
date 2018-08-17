@@ -2,12 +2,16 @@
 # ~/.bashrc
 #
 
-export PS1="[\u@\h \W]\$ "
+# export PS1="[\u@\h \W]\$ "
 # export PROMPT_COMMAND="[\u@\h \W]\$ "
+export CLICOLOR=1
+export LSCOLORS=GxFxCxDxBxegedabagaced
+PS1="\[$(tput bold)\]\[$(tput setaf 6)\][\[$(tput setaf 7)\]\W\[$(tput setaf 6)\]]\[$(tput sgr0)\] "
 
-# export NVM_DIR="$HOME/.nvm"
-# [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-# [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
 export BOOST_INCLUDE="/usr/local/include/boost"
 export BOOST_DIR="/usr/local/Cellar/boost/1.67.0_1"

@@ -5,5 +5,5 @@ alias consystlab ssh consystlab@cse.unl.edu
 alias zebra ssh ihowell@cse-dgeschwe-01.unl.edu
 alias crane ssh ihowell@crane.unl.edu
 alias cse ssh ihowell@cse.unl.edu
-alias la ls-alh
-alias ll ls -l $*
+alias la ls -alh $*
+alias ll ls -lh $*

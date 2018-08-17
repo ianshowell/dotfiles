@@ -300,7 +300,7 @@ rns the path to it."
         (progn
           (setq compile-command "g++ *.c *.cpp")
           (call-interactively 'compile))
-      (compile (format "cd %s; make -j 7" (file-name-directory (get-closest-pathname)))))))
+      (compile (format "cd %s; make -j 11" (file-name-directory (get-closest-pathname)))))))
 
 (defun my-compile-func-release ()
   "This function does a compile."
@@ -310,7 +310,7 @@ rns the path to it."
         (progn
           (setq compile-command "g++ *.c *.cpp")
           (call-interactively 'compile))
-      (compile (format "cd %s; make -j 7 config=release" (file-name-directory (get-closest-pathname)))))))
+      (compile (format "cd %s; make -j 11 config=release" (file-name-directory (get-closest-pathname)))))))
 
 (defun my-compile-func-clean-release ()
   "This function does a clean compile."
@@ -325,7 +325,7 @@ rns the path to it."
 (defun my-compile-func-tests ()
   "This function does a clean compile."
   (interactive)
-  (compile (format "cd %s; make config=gtests -j 7" (file-name-directory (get-closest-pathname)))))
+  (compile (format "cd %s; make config=gtests -j 11" (file-name-directory (get-closest-pathname)))))
 #+END_SRC
 
 ** Fic-mode: Highlights TODO, FIXME, BUG, and KLUDGE in buffer
@@ -487,11 +487,15 @@ rns the path to it."
   (setq tab-width (default-value 'tab-width))))
 #+END_SRC
 ** JSON
-*** Json Mode
+*** JSON Mode
 #+BEGIN_SRC emacs-lisp
 (use-package json-mode)
 #+END_SRC
-
+** QML
+*** QML Mode
+#+BEGIN_SRC emacs-lisp
+(use-package qml-mode)
+#+END_SRC
 
 * Global Key Binds
 ** Change suspend to C-z C-z in terminal, and disable completely for GUI

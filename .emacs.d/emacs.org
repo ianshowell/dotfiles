@@ -87,6 +87,37 @@
 
 #+END_SRC
 
+** Transparency toggle
+*** General Transparency function
+#+BEGIN_SRC emacs-lisp
+;; Set transparency of emacs
+ (defun transparency (value)
+   "Sets the transparency of the frame window. 0=transparent/100=opaque"
+   (interactive "nTransparency Value 0 - 100 opaque:")
+   (set-frame-parameter (selected-frame) 'alpha value))
+#+END_SRC emacs-lisp
+*** Default Transparency
+#+BEGIN_SRC emacs-lisp
+;;(set-frame-parameter (selected-frame) 'alpha '(<active> . <inactive>))
+;;(set-frame-parameter (selected-frame) 'alpha <both>)
+ (set-frame-parameter (selected-frame) 'alpha '(85 . 50))
+ (add-to-list 'default-frame-alist '(alpha . (85 . 50)))
+#+END_SRC emacs-lisp
+*** Toggle script
+#+BEGIN_SRC emacs-lisp
+(defun toggle-transparency ()
+   (interactive)
+   (let ((alpha (frame-parameter nil 'alpha)))
+     (set-frame-parameter
+      nil 'alpha
+      (if (eql (cond ((numberp alpha) alpha)
+                     ((numberp (cdr alpha)) (cdr alpha))
+                     ;; Also handle undocumented (<active> <inactive>) form.
+                     ((numberp (cadr alpha)) (cadr alpha)))
+               100)
+          '(85 . 50) '(100 . 100)))))
+ (global-set-key (kbd "C-c t") 'toggle-transparency)
+#+END_SRC emacs-lisp
 
 ** Font: Default Input Mono Narrow
 #+BEGIN_SRC emacs-lisp
@@ -496,6 +527,7 @@ rns the path to it."
 #+BEGIN_SRC emacs-lisp
 (use-package qml-mode)
 #+END_SRC
+
 
 * Global Key Binds
 ** Change suspend to C-z C-z in terminal, and disable completely for GUI

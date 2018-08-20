@@ -527,7 +527,26 @@ rns the path to it."
 #+BEGIN_SRC emacs-lisp
 (use-package qml-mode)
 #+END_SRC
-
+** Lisp
+*** Working lisp I hope
+#+BEGIN_SRC emacs-lisp
+; This is sample code for starting and specifying defaults to the
+; Emacs-Lisp interface.
+  (push "/Applications/AllegroCLexpress.app/Contents/Resources/eli" load-path)
+  (load "fi-site-init.el")
+;
+  (setq fi:common-lisp-image-name
+    "/Applications/AllegroCLexpress.app/Contents/Resources/alisp")
+  (setq fi:common-lisp-image-file
+    "/Applications/AllegroCLexpress.app/Contents/Resources/alisp.dxl")
+  (setq fi:common-lisp-directory
+    "/Applications/AllegroCLexpress.app/Contents/Resources/")
+#+END_SRC
+*** Allegro Common Lisp
+#+BEGIN_SRC emacs-lisp
+;  (load "/usr/local/acl10.1/eli/fi-site-init.el")
+ ; (setq fi:common-lisp-image-name "/usr/local/acl10.1/alisp")
+#+END_SRC
 
 * Global Key Binds
 ** Change suspend to C-z C-z in terminal, and disable completely for GUI

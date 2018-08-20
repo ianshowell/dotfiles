@@ -164,19 +164,15 @@ module.exports = {
     // Example
       // 'window:devtools': 'cmd+alt+o',
       'pane:next': [
-          'command+]',
           'ctrl+x o'
       ],
       "pane:splitVertical": [
-          "ctrl+shift+d",
           "ctrl+x 2"
       ],
       "pane:splitHorizontal": [
-          "ctrl+d",
           "ctrl+x 3"
       ],
       "pane:close": [
-          "ctrl+shift+w",
           "ctrl+x 0"
       ],
       "editor:undo": [

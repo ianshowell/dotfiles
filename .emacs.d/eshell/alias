@@ -1,4 +1,3 @@
-alias diff coloridff
 alias private ssh ian@www.ihowell.info
 alias sudoku ssh sudoku@cse.unl.edu
 alias consystlab ssh consystlab@cse.unl.edu

@@ -15,17 +15,24 @@ export NVM_DIR="$HOME/.nvm"
 
 export BOOST_INCLUDE="/usr/local/include/boost"
 export BOOST_DIR="/usr/local/Cellar/boost/1.67.0_1"
-export QT_PATH="/usr/local/Cellar/qt/5.11.1/"
+export QT_PATH="/usr/local/Cellar/qt/5.11.1"
+export VTK_INCLUDE="/usr/local/Cellar/vtk/8.1.1_1/include/vtk-8.1"
+export VTK_DIR="/usr/local/Cellar/vtk/8.1.1_1"
 
 alias cse="ssh ihowell@cse.unl.edu"
 alias crane="ssh ihowell@crane.unl.edu"
-alias dgeschwe="ssh ihowell@cse-dgeschwe-01.unl.edu"
+alias zebra="ssh ihowell@cse-dgeschwe-01.unl.edu"
 alias consystlab="ssh consystlab@cse.unl.edu"
 alias sudoku="ssh sudoku@cse.unl.edu"
 alias private="ssh ian@www.ihowell.info"
 
 alias ll="ls -lh"
 alias la="ls -alh"
-alias diff=colordiff
 
 export HISTCONTROL=ignoreboth:erasedups
+
+# Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
+export PATH="$PATH:$HOME/.rvm/bin"
+
+# export CC="$(brew --prefix gcc)/bin/gcc-8"
+# export CXX="$(brew --prefix gcc)/bin/g++-8"

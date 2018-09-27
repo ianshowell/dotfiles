@@ -1,6 +1,6 @@
 #+TITLE: Emacs Org-Babel Config
-#+AUTHOR: Tony Schneider
-#+EMAIL: aschneid@huskers.unl.edu
+#+AUTHOR: Ian Howell
+#+EMAIL: ian.howell@huskers.unl.edu
 
 * Environment Options
 ** OS X setup
@@ -59,7 +59,7 @@
 (setq-default indent-tabs-mode nil)
 (setq-default tab-width 4)
 #+END_SRC
-** Themes: Default Solarized
+** Themes: Default monokai
 *** Some prerequisites (dash and s)
 #+BEGIN_SRC emacs-lisp
 (use-package dash
@@ -67,10 +67,11 @@
 (use-package s
   :ensure t)
 #+END_SRC
-*** Load themes and use Solarized by default
+*** Load themes and use monokai
 #+BEGIN_SRC emacs-lisp
 (use-package solarized-theme :ensure t :no-require t)
-(setq current-theme 'solarized-dark)
+(use-package monokai-theme :ensure t :no-require t)
+(setq current-theme 'monokai)
 (load-theme current-theme t)
 
 (-each
@@ -546,6 +547,22 @@ rns the path to it."
 ;  (load "/usr/local/acl100/eli/fi-site-init.el")
 ;  (setq fi:common-lisp-image-name "/usr/local/acl100/alisp")
 #+END_SRC
+*** Keybindings
+#+BEGIN_SRC emacs-lisp
+  (eval-after-load "fi:common-lisp"
+    '(define-key fi:inferior-common-lisp-mode-map (kbd "M-p") 'fi:pop-input))
+#+END_SRC
+*** Paren Mode
+#+BEGIN_SRC emacs-lisp
+  (setq fi:common-lisp-mode-hook
+      '(lambda ()
+       (setq show-parent-mode t)))
+#+END_SRC
+** HTML
+*** Web mode
+#+BEGIN_SRC emacs-lisp
+(add-to-list 'auto-mode-alist '("\\.html\\'" . web-mode))
+#+END_SRC
 
 
 * Global Key Binds
@@ -617,20 +634,21 @@ rns the path to it."
 * Latex Options
 ** Gets the tex package and sets up Auctex with pdf mode, flyspell, and inline math
 #+BEGIN_SRC emacs-lisp
-(use-package tex
-  :defer t
-  :ensure auctex
-  :config
-  (setq Tex-save-query nil)
-  (setq TeX-PDF-mode t)
-  (setq TeX-auto-save t)
-  (setq TeX-parse-self t)
-  (setq-default TeX-master nil)
-  (add-hook 'LaTeX-mode-hook 'auto-fill-mode)
-  (add-hook 'LaTeX-mode-hook 'flyspell-mode)
-  (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
-  (add-hook 'LaTeX-mode-hook 'turn-on-reftex)
-  (setq reftex-plug-into-AUCTeX t))
+  (use-package tex
+    :defer t
+    :ensure auctex
+    :config
+    (setq Tex-save-query nil)
+    (setq TeX-PDF-mode t)
+    (setq TeX-auto-save t)
+    (setq TeX-parse-self t)
+    (setq-default TeX-master nil)
+    (add-hook 'LaTeX-mode-hook 'auto-fill-mode)
+    (add-hook 'LaTeX-mode-hook 'flyspell-mode)
+    (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
+    (add-hook 'LaTeX-mode-hook 'turn-on-reftex)
+    (setq reftex-plug-into-AUCTeX t)
+    (setq latex-run-command "pdflatex"))
 #+END_SRC
 
 
@@ -727,4 +745,15 @@ rns the path to it."
 ** Move custom options from .emacs file to .custom.el
 #+BEGIN_SRC emacs-lisp
 (setq custom-file "~/.emacs.d/custom.el")
+#+END_SRC
+** Agenda mode customizations
+#+BEGIN_SRC emacs-lisp
+    ;; (setq inhibit-splash-screen t)
+    (setq org-agenda-files '("~/Nextcloud/org/"))
+    (define-key global-map "\C-cl" 'org-store-link)
+    (define-key global-map "\C-ca" 'org-agenda)
+    ;; (add-hook 'after-init-hook '(lambda ()
+    ;;                               (org-agenda-todo)
+    ;;                              (delete-other-windows)))
+  (global-set-key (kbd "C-c M-a") (lambda () (interactive) (find-file "~/Nextcloud/org/work.org")))
 #+END_SRC

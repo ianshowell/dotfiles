@@ -456,19 +456,20 @@ rns the path to it."
 ** C++
 *** Indentation and Formatting
 #+BEGIN_SRC emacs-lisp
-(add-to-list 'auto-mode-alist '("\\.h\\'" . c++-mode))
-(add-hook 'c++-mode-hook
-          (function (lambda ()
-                      (linum-mode 1)
-                      (local-set-key (kbd "<f4>") 'my-compile-func-tests)
-                      (local-set-key (kbd "<f5>") 'my-compile-func-debug)
-                      (local-set-key (kbd "<f6>") 'my-compile-func-release)
-                      (toggle-truncate-lines 1)
-                      (setq indent-tabs-mode t)
-                      (setq defun-block-intro 0)
-                      (setq c-indent-level 4))))
-
-
+ (add-to-list 'auto-mode-alist '("\\.h\\'" . c++-mode))
+ (add-hook 'c++-mode-hook
+           (function (lambda ()
+                       (display-line-numbers-mode 1)
+                       (local-set-key (kbd "<f4>") 'stampede-compile-unit-tests)
+                       (local-set-key (kbd "<f5>") 'stampede-compile-debug)
+                       (local-set-key (kbd "<f6>") 'stampede-compile-balanced)
+                       (local-set-key (kbd "<f3>") 'stampede-compile-func-interactive)
+                       (local-set-key (kbd "<f2>") 'stampede-clean-all)
+                       (toggle-truncate-lines 1)
+                       (setq indent-tabs-mode t)
+                       (setq defun-block-intro 0)
+                       (setq auto-hscroll-mode 'current-line)
+                       (setq c-indent-level 4))))
 #+END_SRC
 *** Clang-format: A package for running clang-format on buffers
 #+BEGIN_SRC emacs-lisp
@@ -498,6 +499,50 @@ rns the path to it."
 #+END_SRC
 
 *** Compilation commands
+*** C/C++ Compilation Defuns for Stampede
+#+BEGIN_SRC emacs-lisp
+ (defun stampede-premake-func ()
+   (format "cd %s; cd config; ./premake5 gmake2" (projectile-project-root)))
+
+ (defun stampede-compile-func (proj config cores)
+   "Generic build function for stampede"
+   (interactive)
+   (setq compile-command (format "%s; cd %s; cd config; cd build; cd gmake2; make %s config=%s -j%s"
+                                 (stampede-premake-func) (projectile-project-root) proj config cores))
+   (compile compile-command))
+
+ (defun stampede-compile-func-interactive (proj config cores)
+   "Asks for projectname, config, and number of cores"
+   (interactive
+    (list
+     (read-string "Project: ")
+     (read-string "Config: ")
+     (read-string "Number of cores: ")))
+   (stampede-compile-func proj config cores))
+
+ (defun stampede-compile-balanced ()
+   "Compiles stampede in release mode."
+   (interactive)
+   (stampede-compile-func "Stampede" "balanced" "11"))
+
+ (defun stampede-compile-unit-tests ()
+   "Compiles unit tests."
+   (interactive)
+   (stampede-compile-func "StampedeUnitTests" "balanced" "11"))
+
+ (defun stampede-compile-debug ()
+   "Compiles unit tests."
+   (interactive)
+   (stampede-compile-func "Stampede" "debug" "11"))
+
+ (defun stampede-clean-all ()
+   "Runs make clean in the specified directory"
+   (interactive)
+   (if (yes-or-no-p "Are you sure you want to clean all?")
+       (progn
+         (setq compile-command (format "cd %s; cd config; cd build/gmake2; make clean" makefile-dir))
+         (compile compile-command))))
+#+END_SRC
 ** QML
 *** Show line numbers
 #+BEGIN_SRC emacs-lisp
@@ -511,6 +556,11 @@ rns the path to it."
 (use-package lua-mode :ensure t)
 #+END_SRC
 ** Python
+*** Elpy
+#+BEGIN_SRC emacs-lisp
+(use-package elpy :ensure t)
+(elpy-enable)
+#+END_SRC
 *** Indentation
 #+BEGIN_SRC emacs-lisp
 (add-hook 'python-mode-hook
@@ -562,6 +612,39 @@ rns the path to it."
 *** Web mode
 #+BEGIN_SRC emacs-lisp
 (add-to-list 'auto-mode-alist '("\\.html\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.php\\'" . web-mode))
+#+END_SRC
+
+** Javascript
+*** JS2-Mode
+#+BEGIN_SRC emacs-lisp
+    (use-package js2-mode :ensure t)
+    (add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
+    (add-to-list 'auto-mode-alist '("\\.jsx$" . web-mode))
+
+    ;; Better imenu
+    (add-hook 'js2-mode-hook #'js2-imenu-extras-mode)
+    (use-package js2-refactor :ensure t)
+    (use-package xref-js2 :ensure t)
+    (add-hook 'js2-mode-hook #'js2-refactor-mode)
+    (js2r-add-keybindings-with-prefix "C-c C-r")
+    (define-key js2-mode-map (kbd "C-k") #'js2r-kill)
+
+    ;; js-mode (which js2 is based on) binds "M-." which conflicts with
+    ;; xref.  unbind it.
+    (define-key js-mode-map (kbd "M-.") nil)
+
+    (add-hook 'js2-mode-hook (lambda ()
+                               (add-hook 'xref-backend-functions #'xref-js2-xref-backend nil t)))
+#+END_SRC
+*** Flycheck for JSX
+#+BEGIN_SRC emacs-lisp
+  (use-package flycheck :ensure t)
+  (setq-default flycheck-disabled-checkers
+                (append flycheck-disabled-checkers
+                        '(javascript-jshint)))
+ (flycheck-add-mode 'javascript-eslint 'web-mode)
+ (flycheck-add-mode 'javascript-eslint 'js2-mode)
 #+END_SRC
 
 
@@ -649,6 +732,11 @@ rns the path to it."
     (add-hook 'LaTeX-mode-hook 'turn-on-reftex)
     (setq reftex-plug-into-AUCTeX t)
     (setq latex-run-command "pdflatex"))
+#+END_SRC
+** Use pdf-tools from politza
+#+BEGIN_SRC emacs-lisp
+  (use-package pdf-tools :ensure t)
+  (pdf-tools-install)
 #+END_SRC
 
 

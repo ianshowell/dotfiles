@@ -568,11 +568,6 @@ rns the path to it."
   (setq indent-tabs-mode nil)
   (setq tab-width (default-value 'tab-width))))
 #+END_SRC
-** JSON
-*** JSON Mode
-#+BEGIN_SRC emacs-lisp
-(use-package json-mode)
-#+END_SRC
 ** QML
 *** QML Mode
 #+BEGIN_SRC emacs-lisp
@@ -647,6 +642,17 @@ rns the path to it."
  (flycheck-add-mode 'javascript-eslint 'js2-mode)
 #+END_SRC
 
+** JSON
+*** JSON Mode
+#+BEGIN_SRC emacs-lisp
+(use-package json-mode)
+#+END_SRC
+** Groovy
+*** Grovy mode and imports
+#+BEGIN_SRC emacs-lisp
+(use-package groovy-imports :ensure t)
+(use-package groovy-mode :ensure t)
+#+END_SRC
 
 * Global Key Binds
 ** Change suspend to C-z C-z in terminal, and disable completely for GUI

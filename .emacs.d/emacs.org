@@ -49,10 +49,27 @@
 (tool-bar-mode -1)
 ;(scroll-bar-mode -1)
 #+END_SRC
-** Use Powerline for modeline display
+** Spaceline
 #+BEGIN_SRC emacs-lisp
-(use-package powerline :ensure t)
-(powerline-default-theme)
+ (use-package spaceline
+      :ensure t
+      :config
+      (progn
+        (require 'spaceline-config)
+        (spaceline-spacemacs-theme)
+        ;; Spaceline themes: arrow, arrow-fade, bar, box, brace,
+        ;; butt, chamfer, contour, curve,
+        ;; rounded, roundstub, slant, wave, zigzag, nil,
+        (setq powerline-default-separator 'wave)
+        (spaceline-toggle-buffer-size-off)
+        (spaceline-toggle-projectile-root-on)
+        (spaceline-toggle-buffer-encoding-abbrev-off)
+        (setq powerline-height 12)
+        (setq-default
+         powerline-default-separator 'wave
+         spaceline-flycheck-bullet "❖ %s"
+         spaceline-separator-dir-left '(right . right)
+         spaceline-separator-dir-right '(left . left))))
 #+END_SRC
 ** Indentation
 #+BEGIN_SRC emacs-lisp
@@ -266,6 +283,18 @@
   (use-package langtool
     :ensure t
     :config (setq langtool-language-tool-jar "~/.emacs.d/langtool/languagetool-commandline.jar"))
+#+END_SRC
+
+** Eyebrowse: Project buffer configuration
+#+BEGIN_SRC emacs-lisp
+   (use-package eyebrowse
+     :ensure t
+     :config
+     (setq
+      eyebrowse-mode-line-separator " "
+      eyebrowse-new-workspace       t)
+     (eyebrowse-mode t)
+     (desktop-save-mode 1))
 #+END_SRC
 
 
@@ -546,8 +575,9 @@ rns the path to it."
 ** QML
 *** Show line numbers
 #+BEGIN_SRC emacs-lisp
+  (use-package qml-mode :ensure t)
   (add-hook 'qml-mode-hook
-              (function (lambda ()
+            (function (lambda ()
                         (linum-mode 1))))
 #+END_SRC
 ** Lua
@@ -613,24 +643,25 @@ rns the path to it."
 ** Javascript
 *** JS2-Mode
 #+BEGIN_SRC emacs-lisp
-    (use-package js2-mode :ensure t)
-    (add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
-    (add-to-list 'auto-mode-alist '("\\.jsx$" . web-mode))
+  (use-package js2-mode :ensure t)
+  (add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
+  (add-to-list 'auto-mode-alist '("\\.jsx$" . web-mode))
+  (setq-default flycheck-temp-prefix ".flycheck")
 
-    ;; Better imenu
-    (add-hook 'js2-mode-hook #'js2-imenu-extras-mode)
-    (use-package js2-refactor :ensure t)
-    (use-package xref-js2 :ensure t)
-    (add-hook 'js2-mode-hook #'js2-refactor-mode)
-    (js2r-add-keybindings-with-prefix "C-c C-r")
-    (define-key js2-mode-map (kbd "C-k") #'js2r-kill)
+  ;; Better imenu
+  (add-hook 'js2-mode-hook #'js2-imenu-extras-mode)
+  (use-package js2-refactor :ensure t)
+  (use-package xref-js2 :ensure t)
+  (add-hook 'js2-mode-hook #'js2-refactor-mode)
+  (js2r-add-keybindings-with-prefix "C-c C-r")
+  (define-key js2-mode-map (kbd "C-k") #'js2r-kill)
 
-    ;; js-mode (which js2 is based on) binds "M-." which conflicts with
-    ;; xref.  unbind it.
-    (define-key js-mode-map (kbd "M-.") nil)
+  ;; js-mode (which js2 is based on) binds "M-." which conflicts with
+  ;; xref.  unbind it.
+  (define-key js-mode-map (kbd "M-.") nil)
 
-    (add-hook 'js2-mode-hook (lambda ()
-                               (add-hook 'xref-backend-functions #'xref-js2-xref-backend nil t)))
+  (add-hook 'js2-mode-hook (lambda ()
+                             (add-hook 'xref-backend-functions #'xref-js2-xref-backend nil t)))
 #+END_SRC
 *** Flycheck for JSX
 #+BEGIN_SRC emacs-lisp
@@ -641,11 +672,16 @@ rns the path to it."
  (flycheck-add-mode 'javascript-eslint 'web-mode)
  (flycheck-add-mode 'javascript-eslint 'js2-mode)
 #+END_SRC
+*** Only need for OSX
+#+BEGIN_SRC emacs-lisp
+  (when (memq window-system '(mac ns))
+    (exec-path-from-shell-initialize))
+#+END_SRC
 
 ** JSON
 *** JSON Mode
 #+BEGIN_SRC emacs-lisp
-(use-package json-mode)
+(use-package json-mode :ensure t)
 #+END_SRC
 ** Groovy
 *** Grovy mode and imports
@@ -653,6 +689,7 @@ rns the path to it."
 (use-package groovy-imports :ensure t)
 (use-package groovy-mode :ensure t)
 #+END_SRC
+
 
 * Global Key Binds
 ** Change suspend to C-z C-z in terminal, and disable completely for GUI
@@ -696,6 +733,10 @@ rns the path to it."
 #+BEGIN_SRC emacs-lisp
   ;; (dolist (key '("\C-x\C-c"))
   ;;   (global-unset-key key))
+#+END_SRC
+** Disable C-Tab. Breaks my machine
+#+BEGIN_SRC emacs-lisp
+  (global-unset-key (kbd "<C-tab>"))
 #+END_SRC
 
 

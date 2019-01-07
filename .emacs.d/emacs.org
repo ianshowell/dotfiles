@@ -285,16 +285,46 @@
     :config (setq langtool-language-tool-jar "~/.emacs.d/langtool/languagetool-commandline.jar"))
 #+END_SRC
 
+** Desktop: Saving desktop state
+#+BEGIN_SRC emacs-lisp
+  (use-package desktop :ensure t)
+  (desktop-save-mode 1)
+
+  ;; Auto-save
+  (defun my-desktop-save ()
+    (interactive)
+    ;; Don't call desktop-save-0in-desktop-dir, as it prints a message
+    (if (eq (desktop-owner) (emacs-pid))
+        (desktop-save dsesktop-dirname)))
+  (add-hook 'auto-save-hook 'my-desktop-save)
+
+  ;; Override stale locks
+  (defun emacs-process-p (pid)
+    "If pid is the process ID of an emacs process, return t, else nil. Also returns nil if pid is nil."
+    (when pid
+      (let* ((cmdline-file (concat "/proc/" (int-to-string pid) "/cmdline")))
+        (when (file-exists-p cmdline-file)
+          (with-temp-buffer
+            (insert-file-contents-literally cmdline-file)
+            (goto-char (point-min))
+            (search-forward "emacs" nil t)
+            pid)))))
+  (defadvice desktop-owner (after pry-from-cold-dead-hands activate)
+    "Don't allow dead emacsen to own the desktop file."
+    (when (not (emacs-process-p ad-return-value))
+      (setq ad-return-value nil)))
+#+END_SRC
+
+
 ** Eyebrowse: Project buffer configuration
 #+BEGIN_SRC emacs-lisp
-   (use-package eyebrowse
-     :ensure t
-     :config
-     (setq
-      eyebrowse-mode-line-separator " "
-      eyebrowse-new-workspace       t)
-     (eyebrowse-mode t)
-     (desktop-save-mode 1))
+  (use-package eyebrowse
+    :ensure t
+    :config
+    (setq
+     eyebrowse-mode-line-separator " "
+     eyebrowse-new-workspace       t)
+    (eyebrowse-mode t))
 #+END_SRC
 
 

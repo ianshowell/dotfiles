@@ -41,6 +41,11 @@
               (ns-raise-emacs)))))
 #+END_SRC
 
+** Show Paren Mode
+#+BEGIN_SRC emacs-lisp
+  (setq show-paren-mode 1)
+#+END_SRC
+
 
 * Display Options
 ** Turn off menu bar, tool bar, and scroll
@@ -297,24 +302,7 @@
     (if (eq (desktop-owner) (emacs-pid))
         (desktop-save dsesktop-dirname)))
   (add-hook 'auto-save-hook 'my-desktop-save)
-
-  ;; Override stale locks
-  (defun emacs-process-p (pid)
-    "If pid is the process ID of an emacs process, return t, else nil. Also returns nil if pid is nil."
-    (when pid
-      (let* ((cmdline-file (concat "/proc/" (int-to-string pid) "/cmdline")))
-        (when (file-exists-p cmdline-file)
-          (with-temp-buffer
-            (insert-file-contents-literally cmdline-file)
-            (goto-char (point-min))
-            (search-forward "emacs" nil t)
-            pid)))))
-  (defadvice desktop-owner (after pry-from-cold-dead-hands activate)
-    "Don't allow dead emacsen to own the desktop file."
-    (when (not (emacs-process-p ad-return-value))
-      (setq ad-return-value nil)))
 #+END_SRC
-
 
 ** Eyebrowse: Project buffer configuration
 #+BEGIN_SRC emacs-lisp
@@ -519,11 +507,6 @@ rns the path to it."
  (add-hook 'c++-mode-hook
            (function (lambda ()
                        (display-line-numbers-mode 1)
-                       (local-set-key (kbd "<f4>") 'stampede-compile-unit-tests)
-                       (local-set-key (kbd "<f5>") 'stampede-compile-debug)
-                       (local-set-key (kbd "<f6>") 'stampede-compile-balanced)
-                       (local-set-key (kbd "<f3>") 'stampede-compile-func-interactive)
-                       (local-set-key (kbd "<f2>") 'stampede-clean-all)
                        (toggle-truncate-lines 1)
                        (setq indent-tabs-mode t)
                        (setq defun-block-intro 0)
@@ -557,50 +540,135 @@ rns the path to it."
 (add-hook 'c++-mode-hook #'modern-c++-font-lock-mode))
 #+END_SRC
 
-*** Compilation commands
+*** Compilation commands with Premake base (common)
+#+BEGIN_SRC emacs-lisp
+  (defun premake-func ()
+    (format "cd %s; cd config; ./premake5 gmake2" (projectile-project-root)))
+
+  (defun compile-func (proj config cores)
+    "Generic build function for stampede"
+    (interactive)
+    (setq compile-command (format "%s; cd %s; cd config; cd build; cd gmake2; make %s config=%s -j%s"
+                                  (premake-func) (projectile-project-root) proj config cores))
+    (compile compile-command))
+
+  (defun compile-func-interactive (proj config cores)
+    "Asks for projectname, config, and number of cores"
+    (interactive
+     (list
+      (read-string "Project: ")
+      (read-string "Config: ")
+      (read-string "Number of cores: ")))
+    (stampede-compile-func proj config cores))
+#+END_SRC
 *** C/C++ Compilation Defuns for Stampede
 #+BEGIN_SRC emacs-lisp
- (defun stampede-premake-func ()
-   (format "cd %s; cd config; ./premake5 gmake2" (projectile-project-root)))
+  (defun stampede-compile-func-interactive ()
+    (compile-func-interactive "Stampede" "balanced" "11"))
 
- (defun stampede-compile-func (proj config cores)
-   "Generic build function for stampede"
-   (interactive)
-   (setq compile-command (format "%s; cd %s; cd config; cd build; cd gmake2; make %s config=%s -j%s"
-                                 (stampede-premake-func) (projectile-project-root) proj config cores))
-   (compile compile-command))
+  (defun stampede-compile-balanced ()
+    "Compiles stampede in release mode."
+    (interactive)
+    (compile-func "Stampede" "balanced" "11"))
 
- (defun stampede-compile-func-interactive (proj config cores)
-   "Asks for projectname, config, and number of cores"
-   (interactive
-    (list
-     (read-string "Project: ")
-     (read-string "Config: ")
-     (read-string "Number of cores: ")))
-   (stampede-compile-func proj config cores))
+  (defun stampede-compile-unit-tests ()
+    "Compiles unit tests."
+    (interactive)
+    (compile-func "StampedeUnitTests" "debug" "11"))
 
- (defun stampede-compile-balanced ()
-   "Compiles stampede in release mode."
-   (interactive)
-   (stampede-compile-func "Stampede" "balanced" "11"))
+  (defun stampede-compile-debug ()
+    "Compiles unit tests."
+    (interactive)
+    (compile-func "Stampede" "debug" "11"))
 
- (defun stampede-compile-unit-tests ()
-   "Compiles unit tests."
-   (interactive)
-   (stampede-compile-func "StampedeUnitTests" "balanced" "11"))
+  (defun stampede-clean-all ()
+    "Runs make clean in the specified directory"
+    (interactive)
+    (if (yes-or-no-p "Are you sure you want to clean all?")
+        (progn
+          (setq compile-command (format "cd %s; cd config; cd build/gmake2; make clean" makefile-dir))
+          (compile compile-command))))
 
- (defun stampede-compile-debug ()
-   "Compiles unit tests."
-   (interactive)
-   (stampede-compile-func "Stampede" "debug" "11"))
+  (add-hook 'c++-mode-hook
+            (function (lambda ()
+                        (local-set-key (kbd "<f4> u") 'stampede-compile-unit-tests)
+                        (local-set-key (kbd "<f4> d") 'stampede-compile-debug)
+                        (local-set-key (kbd "<f4> r") 'stampede-compile-balanced)
+                        (local-set-key (kbd "<f4> i") 'stampede-compile-func-interactive)
+                        (local-set-key (kbd "<f4> c") 'clean-all))))
+#+END_SRC
+*** C/C++ Compilation Defuns for Stardust
+#+BEGIN_SRC emacs-lisp
+    (defun stardust-compile-func-interactive ()
+      (compile-func-interactive "Stardust" "balanced" "11"))
 
- (defun stampede-clean-all ()
-   "Runs make clean in the specified directory"
-   (interactive)
-   (if (yes-or-no-p "Are you sure you want to clean all?")
-       (progn
-         (setq compile-command (format "cd %s; cd config; cd build/gmake2; make clean" makefile-dir))
-         (compile compile-command))))
+    (defun stardust-compile-balanced ()
+      "Compiles stardust in release mode."
+      (interactive)
+      (compile-func "Stardust" "balanced" "11"))
+
+    (defun stardust-compile-unit-tests ()
+      "Compiles unit tests."
+      (interactive)
+      (compile-func "StardustUnitTests" "debug" "11")
+      (compile-func "StardustIntegrationTests" "debug" "11"))
+
+    (defun stardust-compile-debug ()
+      "Compiles unit tests."
+      (interactive)
+      (compile-func "Stardust" "debug" "11"))
+
+    (defun stardust-clean-all ()
+      "Runs make clean in the specified directory"
+      (interactive)
+      (if (yes-or-no-p "Are you sure you want to clean all?")
+          (progn
+            (setq compile-command (format "cd %s; cd config; cd build/gmake2; make clean" makefile-dir))
+            (compile compile-command))))
+
+    (add-hook 'c++-mode-hook
+              (function (lambda ()
+                          (local-set-key (kbd "<f5> u") 'stardust-compile-unit-tests)
+                          (local-set-key (kbd "<f5> d") 'stardust-compile-debug)
+                          (local-set-key (kbd "<f5> r") 'stardust-compile-balanced)
+                          (local-set-key (kbd "<f5> i") 'stardust-compile-func-interactive)
+                          (local-set-key (kbd "<f5> c") 'stardust-clean-all))))
+#+END_SRC
+*** C/C++ Compilation Defuns for Wormhole
+#+BEGIN_SRC emacs-lisp
+  (defun wormhole-compile-func-interactive ()
+    (compile-func-interactive "Wormhole" "balanced" "11"))
+
+  (defun wormhole-compile-balanced ()
+    "Compiles wormhole in release mode."
+    (interactive)
+    (compile-func "Wormhole" "balanced" "11"))
+
+  (defun wormhole-compile-unit-tests ()
+    "Compiles unit tests."
+    (interactive)
+    (compile-func "WormholeUnitTests" "debug" "11"))
+
+  (defun wormhole-compile-debug ()
+    "Compiles unit tests."
+    (interactive)
+    (compile-func "Wormhole" "debug" "11"))
+
+  (defun wormhole-clean-all ()
+    "Runs make clean in the specified directory"
+    (interactive)
+    (if (yes-or-no-p "Are you sure you want to clean all?")
+        (progn
+          (setq compile-command (format "cd %s; cd config; cd build/gmake2; make clean" makefile-dir))
+          (compile compile-command))))
+
+  (add-hook 'c++-mode-hook
+            (function (lambda ()
+                        (local-set-key (kbd "<f6> u") 'wormhole-compile-unit-tests)
+                        (local-set-key (kbd "<f6> d") 'wormhole-compile-debug)
+                        (local-set-key (kbd "<f6> r") 'wormhole-compile-balanced)
+                        (local-set-key (kbd "<f6> i") 'wormhole-compile-func-interactive)
+                        (local-set-key (kbd "<f6> c") 'wormhole-clean-all))))
 #+END_SRC
 ** QML
 *** Show line numbers

@@ -19,6 +19,7 @@ export BOOST_DIR="/usr/local/Cellar/boost/1.67.0_1"
 export QT_PATH="/usr/local/Cellar/qt/5.11.1"
 export VTK_INCLUDE="/usr/local/opt/vtk/include/vtk-8.1"
 export VTK_LIB="/usr/local/opt/vtk"
+export PYCURL_SSL_LIBRARY=openssl
 
 alias cse="ssh ihowell@cse.unl.edu"
 alias crane="ssh ihowell@crane.unl.edu"

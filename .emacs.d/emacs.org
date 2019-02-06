@@ -591,11 +591,11 @@ rns the path to it."
 
   (add-hook 'c++-mode-hook
             (function (lambda ()
-                        (local-set-key (kbd "<f4> u") 'stampede-compile-unit-tests)
-                        (local-set-key (kbd "<f4> d") 'stampede-compile-debug)
-                        (local-set-key (kbd "<f4> r") 'stampede-compile-balanced)
-                        (local-set-key (kbd "<f4> i") 'stampede-compile-func-interactive)
-                        (local-set-key (kbd "<f4> c") 'clean-all))))
+                        (local-set-key (kbd "<f3> u") 'stampede-compile-unit-tests)
+                        (local-set-key (kbd "<f3> d") 'stampede-compile-debug)
+                        (local-set-key (kbd "<f3> r") 'stampede-compile-balanced)
+                        (local-set-key (kbd "<f3> i") 'stampede-compile-func-interactive)
+                        (local-set-key (kbd "<f3> c") 'clean-all))))
 #+END_SRC
 *** C/C++ Compilation Defuns for Stardust
 #+BEGIN_SRC emacs-lisp
@@ -628,11 +628,48 @@ rns the path to it."
 
     (add-hook 'c++-mode-hook
               (function (lambda ()
-                          (local-set-key (kbd "<f5> u") 'stardust-compile-unit-tests)
-                          (local-set-key (kbd "<f5> d") 'stardust-compile-debug)
-                          (local-set-key (kbd "<f5> r") 'stardust-compile-balanced)
-                          (local-set-key (kbd "<f5> i") 'stardust-compile-func-interactive)
-                          (local-set-key (kbd "<f5> c") 'stardust-clean-all))))
+                          (local-set-key (kbd "<f4> u") 'stardust-compile-unit-tests)
+                          (local-set-key (kbd "<f4> d") 'stardust-compile-debug)
+                          (local-set-key (kbd "<f4> r") 'stardust-compile-balanced)
+                          (local-set-key (kbd "<f4> i") 'stardust-compile-func-interactive)
+                          (local-set-key (kbd "<f4> c") 'stardust-clean-all))))
+#+END_SRC
+*** C/C++ Compilation Defuns for Blackhole
+#+BEGIN_SRC emacs-lisp
+    (defun blackhole-compile-func-interactive ()
+      (compile-func-interactive "Blackhole" "balanced" "11"))
+
+    (defun blackhole-compile-balanced ()
+      "Compiles blackhole in release mode."
+      (interactive)
+      (compile-func "Blackhole" "balanced" "11"))
+
+    (defun blackhole-compile-unit-tests ()
+      "Compiles unit tests."
+      (interactive)
+      (compile-func "BlackholeUnitTests" "debug" "11")
+      (compile-func "BlackholeIntegrationTests" "debug" "11"))
+
+    (defun blackhole-compile-debug ()
+      "Compiles unit tests."
+      (interactive)
+      (compile-func "Blackhole" "debug" "11"))
+
+    (defun blackhole-clean-all ()
+      "Runs make clean in the specified directory"
+      (interactive)
+      (if (yes-or-no-p "Are you sure you want to clean all?")
+          (progn
+            (setq compile-command (format "cd %s; cd config; cd build/gmake2; make clean" makefile-dir))
+            (compile compile-command))))
+
+    (add-hook 'c++-mode-hook
+              (function (lambda ()
+                          (local-set-key (kbd "<f5> u") 'blackhole-compile-unit-tests)
+                          (local-set-key (kbd "<f5> d") 'blackhole-compile-debug)
+                          (local-set-key (kbd "<f5> r") 'blackhole-compile-balanced)
+                          (local-set-key (kbd "<f5> i") 'blackhole-compile-func-interactive)
+                          (local-set-key (kbd "<f5> c") 'blackhole-clean-all))))
 #+END_SRC
 *** C/C++ Compilation Defuns for Wormhole
 #+BEGIN_SRC emacs-lisp
@@ -686,8 +723,9 @@ rns the path to it."
 ** Python
 *** Elpy
 #+BEGIN_SRC emacs-lisp
-(use-package elpy :ensure t)
-(elpy-enable)
+  ;; (use-package elpy :ensure t)
+  ;; ;
+                                          ; (elpy-enable)
 #+END_SRC
 *** Indentation
 #+BEGIN_SRC emacs-lisp
@@ -700,36 +738,6 @@ rns the path to it."
 *** QML Mode
 #+BEGIN_SRC emacs-lisp
 (use-package qml-mode)
-#+END_SRC
-** Lisp
-*** Allegro Common Lisp
-#+BEGIN_SRC emacs-lisp
-; This is sample code for starting and specifying defaults to the
-; Emacs-Lisp interface.
-  (push "/Applications/AllegroCLexpress.app/Contents/Resources/eli" load-path)
-  (load "fi-site-init.el")
-  (setq fi:common-lisp-image-name
-    "/Applications/AllegroCLexpress.app/Contents/Resources/alisp")
-  (setq fi:common-lisp-image-file
-    "/Applications/AllegroCLexpress.app/Contents/Resources/alisp.dxl")
-  (setq fi:common-lisp-directory
-    "/Applications/AllegroCLexpress.app/Contents/Resources/")
-#+END_SRC
-*** CSE Server lisp
-#+BEGIN_SRC emacs-lisp
-;  (load "/usr/local/acl100/eli/fi-site-init.el")
-;  (setq fi:common-lisp-image-name "/usr/local/acl100/alisp")
-#+END_SRC
-*** Keybindings
-#+BEGIN_SRC emacs-lisp
-  (eval-after-load "fi:common-lisp"
-    '(define-key fi:inferior-common-lisp-mode-map (kbd "M-p") 'fi:pop-input))
-#+END_SRC
-*** Paren Mode
-#+BEGIN_SRC emacs-lisp
-  (setq fi:common-lisp-mode-hook
-      '(lambda ()
-       (setq show-parent-mode t)))
 #+END_SRC
 ** HTML
 *** Web mode
@@ -989,4 +997,13 @@ rns the path to it."
     ;;                               (org-agenda-todo)
     ;;                              (delete-other-windows)))
   (global-set-key (kbd "C-c M-a") (lambda () (interactive) (find-file "~/Nextcloud/org/work.org")))
+#+END_SRC
+** Kill other buffers
+#+BEGIN_SRC emacs-lisp
+(defun kill-other-buffers ()
+    "Kill all other buffers."
+    (interactive)
+    (mapc 'kill-buffer
+          (delq (current-buffer)
+                (remove-if-not 'buffer-file-name (buffer-list)))))
 #+END_SRC

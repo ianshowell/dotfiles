@@ -1,4 +1,3 @@
-alias cp_stardust cd /Users/ihowell/Projects/stampede/lib; rm -r stardust/; cp -r ../../stardust ./; cd ..
 alias ll ls -lh $*
 alias la ls -alh $*
 alias cse ssh ihowell@cse.unl.edu

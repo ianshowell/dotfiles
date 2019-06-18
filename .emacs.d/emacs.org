@@ -41,11 +41,6 @@
               (ns-raise-emacs)))))
 #+END_SRC
 
-** Show Paren Mode
-#+BEGIN_SRC emacs-lisp
-  (setq show-paren-mode 1)
-#+END_SRC
-
 
 * Display Options
 ** Turn off menu bar, tool bar, and scroll
@@ -142,12 +137,21 @@
  (global-set-key (kbd "C-c t") 'toggle-transparency)
 #+END_SRC emacs-lisp
 
-** Font: Default Input Mono Narrow
+** Font: Default Hack
 #+BEGIN_SRC emacs-lisp
-  (set-face-attribute 'default nil :family "Input Mono Narrow")
-  (set-face-attribute 'default nil :height 130)
-  ;; (set-face-attribute 'default nil :weight 'light)
+    ;; Use hack
+    (when (eq system-type 'darwin)
+      (set-default-font "-*-Hack-normal-normal-normal-*-12-*-*-*-m-0-iso10646-1"))
+  ;; Use all the icons for nicer icons. Useful in NeoTree
+  (use-package all-the-icons :ensure t)
+  ;; (set-fontset-font t 'unicode (font-spec :family "all-the-icons") nil 'append)
 #+END_SRC
+
+** Highlight cursor
+#+BEGIN_SRC emacs-lisp
+(global-hl-line-mode +1)
+#+END_SRC
+
 
 
 * General Packages
@@ -300,7 +304,7 @@
     (interactive)
     ;; Don't call desktop-save-0in-desktop-dir, as it prints a message
     (if (eq (desktop-owner) (emacs-pid))
-        (desktop-save dsesktop-dirname)))
+        (desktop-save desktop-dirname)))
   (add-hook 'auto-save-hook 'my-desktop-save)
 #+END_SRC
 
@@ -313,6 +317,12 @@
      eyebrowse-mode-line-separator " "
      eyebrowse-new-workspace       t)
     (eyebrowse-mode t))
+#+END_SRC
+
+** Neotree
+#+BEGIN_SRC emacs-lisp
+(use-package neotree :ensure t)
+(setq neo-theme (if (display-graphic-p) 'icons 'arrow))
 #+END_SRC
 
 
@@ -328,10 +338,10 @@
 #+END_SRC
 ** Clang format function: Use clang format on save to format file
 #+BEGIN_SRC emacs-lisp
-(defun clang-format-before-save ()
-  (interactive)
-  (when (eq major-mode 'c++-mode) (clang-format-buffer)))
-(add-hook 'before-save-hook 'clang-format-before-save)
+  (defun clang-format-before-save ()
+    (interactive)
+    (when (eq major-mode 'c++-mode) (clang-format-buffer)))
+  (add-hook 'before-save-hook 'clang-format-before-save)
 #+END_SRC
 
 ** Compilation Configurationfunctions
@@ -432,8 +442,6 @@ rns the path to it."
       '(custom-set-variables
         '(flycheck-display-errors-function #'flycheck-pos-tip-error-messages)))
     ))
-
-(use-package flycheck-irony :ensure t)
 #+END_SRC
 *** Irony - Code completion and compilation checking backend.
 #+BEGIN_SRC emacs-lisp
@@ -485,7 +493,7 @@ rns the path to it."
 #+END_SRC
 
 *** Indentation and Formatting
-#
+#+BEGIN_SRC emacs-lisp
 (setq c-default-style "linux" c-basic-offset 4)
 (c-set-offset 'inline-open 0)
 (add-hook 'c-mode-hook
@@ -571,10 +579,11 @@ rns the path to it."
     (interactive)
     (compile-func "Stampede" "balanced" "11"))
 
-  (defun stampede-compile-unit-tests ()
+  (defun stampede-compile-tests ()
     "Compiles unit tests."
     (interactive)
-    (compile-func "StampedeUnitTests" "debug" "11"))
+    (compile-func "StampedeUnitTests" "debug" "11")
+    (compile-func "StampedeIntegrationTests" "debug" "11"))
 
   (defun stampede-compile-debug ()
     "Compiles unit tests."
@@ -591,7 +600,7 @@ rns the path to it."
 
   (add-hook 'c++-mode-hook
             (function (lambda ()
-                        (local-set-key (kbd "<f3> u") 'stampede-compile-unit-tests)
+                        (local-set-key (kbd "<f3> t") 'stampede-compile-tests)
                         (local-set-key (kbd "<f3> d") 'stampede-compile-debug)
                         (local-set-key (kbd "<f3> r") 'stampede-compile-balanced)
                         (local-set-key (kbd "<f3> i") 'stampede-compile-func-interactive)
@@ -607,7 +616,7 @@ rns the path to it."
       (interactive)
       (compile-func "Stardust" "balanced" "11"))
 
-    (defun stardust-compile-unit-tests ()
+    (defun stardust-compile-tests ()
       "Compiles unit tests."
       (interactive)
       (compile-func "StardustUnitTests" "debug" "11")
@@ -628,7 +637,7 @@ rns the path to it."
 
     (add-hook 'c++-mode-hook
               (function (lambda ()
-                          (local-set-key (kbd "<f4> u") 'stardust-compile-unit-tests)
+                          (local-set-key (kbd "<f4> t") 'stardust-compile-tests)
                           (local-set-key (kbd "<f4> d") 'stardust-compile-debug)
                           (local-set-key (kbd "<f4> r") 'stardust-compile-balanced)
                           (local-set-key (kbd "<f4> i") 'stardust-compile-func-interactive)
@@ -644,11 +653,11 @@ rns the path to it."
       (interactive)
       (compile-func "Blackhole" "balanced" "11"))
 
-    (defun blackhole-compile-unit-tests ()
+    (defun blackhole-compile-tests ()
       "Compiles unit tests."
       (interactive)
-      (compile-func "BlackholeUnitTests" "debug" "11")
-      (compile-func "BlackholeIntegrationTests" "debug" "11"))
+      (compile-func "" "debug" "11"))
+
 
     (defun blackhole-compile-debug ()
       "Compiles unit tests."
@@ -665,7 +674,7 @@ rns the path to it."
 
     (add-hook 'c++-mode-hook
               (function (lambda ()
-                          (local-set-key (kbd "<f5> u") 'blackhole-compile-unit-tests)
+                          (local-set-key (kbd "<f5> t") 'blackhole-compile-tests)
                           (local-set-key (kbd "<f5> d") 'blackhole-compile-debug)
                           (local-set-key (kbd "<f5> r") 'blackhole-compile-balanced)
                           (local-set-key (kbd "<f5> i") 'blackhole-compile-func-interactive)
@@ -723,16 +732,29 @@ rns the path to it."
 ** Python
 *** Elpy
 #+BEGIN_SRC emacs-lisp
-  ;; (use-package elpy :ensure t)
-  ;; ;
-                                          ; (elpy-enable)
+  (use-package elpy :ensure t)
+  (elpy-enable)
+  ;; Set the interactive python shell to use jupyter
+  (setq python-shell-interpreter "jupyter"
+        python-shell-interpreter-args "console --simple-prompt"
+        python-shell-prompt-detect-failure-warning nil)
+  (add-to-list 'python-shell-completion-native-disabled-interpreters
+               "jupyter")
+
+#+END_SRC
+*** yapf format function: Use yapf format on save to format file
+#+BEGIN_SRC emacs-lisp
+  (defun yapf-format-before-save ()
+    (interactive)
+    (when (eq major-mode 'python-mode) (elpy-yapf-fix-code)))
+  (add-hook 'before-save-hook 'yapf-format-before-save)
 #+END_SRC
 *** Indentation
 #+BEGIN_SRC emacs-lisp
-(add-hook 'python-mode-hook
-(lambda ()
-  (setq indent-tabs-mode nil)
-  (setq tab-width (default-value 'tab-width))))
+  ;; (add-hook 'python-mode-hook
+  ;; (lambda ()
+  ;;   (setq indent-tabs-mode nil)
+  ;;   (setq tab-width (default-value 'tab-width))))
 #+END_SRC
 ** QML
 *** QML Mode
@@ -795,6 +817,11 @@ rns the path to it."
 (use-package groovy-imports :ensure t)
 (use-package groovy-mode :ensure t)
 #+END_SRC
+** Markdown
+*** Markdown mode
+#+BEGIN_SRC emacs-lisp
+(use-package markdown-mode :ensure t)
+#+END_SRC
 
 
 * Global Key Binds
@@ -810,9 +837,11 @@ rns the path to it."
       (message "suspend-frame disabled for graphical displays.")
     (suspend-frame)))
 #+END_SRC
-** Use <F1> to switch between open emacs frames
+** Use <F1> to find manually entries
 #+BEGIN_SRC emacs-lisp
-(global-set-key (kbd "<f1>") 'other-frame)
+  (global-set-key (kbd "<f1>") (lambda ()
+                                 (interactive)
+                                 (manual-entry (read-string "Documentation: "))))
 #+END_SRC
 ** Use <F7> to enter magit-status screen for buffers under git control
 #+BEGIN_SRC emacs-lisp
@@ -884,7 +913,30 @@ rns the path to it."
     (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
     (add-hook 'LaTeX-mode-hook 'turn-on-reftex)
     (setq reftex-plug-into-AUCTeX t)
-    (setq latex-run-command "pdflatex"))
+    (setq latex-run-command "pdflatex --synctex=1"))
+#+END_SRC
+** References through org-ref and helm
+#+BEGIN_SRC emacs-lisp
+  ;; (setq my-bib-file-path "~/Papers/QualificationExam/my-bib-file.bib")
+  ;; (use-package helm-bibtex :ensure t
+  ;;   :bind (("C-c i" . helm-bibtex))
+
+  ;;   :config
+  ;;   (setq bibtex-completion-cite-prompt-for-optional-arguments nil)
+  ;;   (setq bibtex-completion-additional-search-fields '(keywords))
+  ;;   (setq bibtex-completion-bibliography
+  ;;         '(my-bib-file-path)))
+
+  ;; (use-package org-ref :ensure t
+  ;;   :bind (("C-c i" . helm-bibtex))
+  ;;   :config
+  ;;   (setq reftex-default-bibliography '(my-bib-file-path))
+
+  ;;   ;; see org-ref for use of these variables
+  ;;   (setq
+  ;;    org-ref-default-bibliography '(my-bib-file-path))
+  ;;   ;;If you use helm-bibtex as the citation key completion method you should set these variables too.
+  ;;   (setq bibtex-completion-bibliography my-bib-file-path))
 #+END_SRC
 ** Use pdf-tools from politza
 #+BEGIN_SRC emacs-lisp

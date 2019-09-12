@@ -46,3 +46,5 @@ export PKG_CONFIG_PATH="/usr/local/opt/libffi/lib/pkgconfig"
 
 # export PATH="/usr/local/opt/llvm/bin:$PATH"
 export PATH="/Users/ihowell/.local/bin:$PATH"
+
+# export PATH="/usr/local/opt/llvm/bin:$PATH"

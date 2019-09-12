@@ -6,34 +6,34 @@
 ** OS X setup
 *** Ensures PATH in eshell and user shell are the same
 #+BEGIN_SRC emacs-lisp
-(if (and (eq system-type 'darwin) (featurep 'ns))
-  (progn
-      (use-package exec-path-from-shell
-      :ensure t
-      :init (exec-path-from-shell-initialize))))
+  (if (eq system-type 'darwin)
+      (progn
+        (use-package exec-path-from-shell
+          :ensure t
+          :init (exec-path-from-shell-initialize))))
 #+END_SRC
 *** Makes both command and option meta key
 #+BEGIN_SRC emacs-lisp
-(if (and (eq system-type 'darwin) (featurep 'ns))
-    (progn
-      (setq mac-command-modifier 'meta)
-      (setq mac-option-modifier 'meta))
-  (progn))
+  (if (and (eq system-type 'darwin) (featurep 'ns))
+      (progn
+        (setq mac-command-modifier 'meta)
+        (setq mac-option-modifier 'meta))
+    (progn))
 #+END_SRC
 *** Use apple script to launch new frames, but hides last frame instead of killing it (for server mode)
 #+BEGIN_SRC emacs-lisp
-(if (and (eq system-type 'darwin) (featurep 'ns))
-    (progn
-      (defun ns-raise-emacs ()
-        "Raise Emacs."
-        (do-applescript "tell application \"Emacs\" to activate"))
-      (defadvice handle-delete-frame (around my-handle-delete-frame-advice activate)
-        "Hide Emacs instead of closing the last frame"
-        (let ((frame   (posn-window (event-start event)))
-              (numfrs  (length (frame-list))))
-          (if (> numfrs 1)
-            ad-do-it
-            (do-applescript "tell application \"System Events\" to tell process \"Emacs\" to set visible to false"))))
+  (if (and (eq system-type 'darwin) (featurep 'ns))
+      (progn
+        (defun ns-raise-emacs ()
+          "Raise Emacs."
+          (do-applescript "tell application \"Emacs\" to activate"))
+        (defadvice handle-delete-frame (around my-handle-delete-frame-advice activate)
+          "Hide Emacs instead of closing the last frame"
+          (let ((frame   (posn-window (event-start event)))
+                (numfrs  (length (frame-list))))
+            (if (> numfrs 1)
+                ad-do-it
+              (do-applescript "tell application \"System Events\" to tell process \"Emacs\" to set visible to false"))))
         (if (display-graphic-p)
             (progn
               (add-hook 'server-visit-hook 'ns-raise-emacs)
@@ -45,63 +45,63 @@
 * Display Options
 ** Turn off menu bar, tool bar, and scroll
 #+BEGIN_SRC emacs-lisp
-(menu-bar-mode -1)
-(tool-bar-mode -1)
-;(scroll-bar-mode -1)
+  (menu-bar-mode -1)
+  (tool-bar-mode -1)
+                                          ;(scroll-bar-mode -1)
 #+END_SRC
 ** Spaceline
 #+BEGIN_SRC emacs-lisp
- (use-package spaceline
-      :ensure t
-      :config
-      (progn
-        (require 'spaceline-config)
-        (spaceline-spacemacs-theme)
-        ;; Spaceline themes: arrow, arrow-fade, bar, box, brace,
-        ;; butt, chamfer, contour, curve,
-        ;; rounded, roundstub, slant, wave, zigzag, nil,
-        (setq powerline-default-separator 'wave)
-        (spaceline-toggle-buffer-size-off)
-        (spaceline-toggle-projectile-root-on)
-        (spaceline-toggle-buffer-encoding-abbrev-off)
-        (setq powerline-height 12)
-        (setq-default
-         powerline-default-separator 'wave
-         spaceline-flycheck-bullet "❖ %s"
-         spaceline-separator-dir-left '(right . right)
-         spaceline-separator-dir-right '(left . left))))
+  (use-package spaceline
+    :ensure t
+    :config
+    (progn
+      (require 'spaceline-config)
+      (spaceline-spacemacs-theme)
+      ;; Spaceline themes: arrow, arrow-fade, bar, box, brace,
+      ;; butt, chamfer, contour, curve,
+      ;; rounded, roundstub, slant, wave, zigzag, nil,
+      (setq powerline-default-separator 'wave)
+      (spaceline-toggle-buffer-size-off)
+      (spaceline-toggle-projectile-root-on)
+      (spaceline-toggle-buffer-encoding-abbrev-off)
+      (setq powerline-height 12)
+      (setq-default
+       powerline-default-separator 'wave
+       spaceline-flycheck-bullet "❖ %s"
+       spaceline-separator-dir-left '(right . right)
+       spaceline-separator-dir-right '(left . left))))
 #+END_SRC
 ** Indentation
 #+BEGIN_SRC emacs-lisp
-(setq-default indent-tabs-mode nil)
-(setq-default tab-width 4)
+  (setq-default indent-tabs-mode nil)
+  (setq-default tab-width 4)
 #+END_SRC
 ** Themes: Default monokai
 *** Some prerequisites (dash and s)
 #+BEGIN_SRC emacs-lisp
-(use-package dash
-  :ensure t)
-(use-package s
-  :ensure t)
+  (use-package dash
+    :ensure t)
+  (use-package s
+    :ensure t)
 #+END_SRC
 *** Load themes and use monokai
 #+BEGIN_SRC emacs-lisp
-(use-package solarized-theme :ensure t :no-require t)
-(use-package monokai-theme :ensure t :no-require t)
-(setq current-theme 'monokai)
-(load-theme current-theme t)
+  (use-package solarized-theme :ensure t :no-require t)
+  (use-package monokai-theme :ensure t :no-require t)
+  (setq current-theme 'monokai)
+  (load-theme current-theme t)
 
-(-each
-    (-map
-     (lambda (item)
-       (format "~/.emacs.d/elpa/%s" item))
-     (-filter
-      (lambda (item) (s-contains? "theme" item))
-      (directory-files "~/.emacs.d/elpa/")))
-  (lambda (item)
-    (add-to-list 'custom-theme-load-path item)))
+  (-each
+      (-map
+       (lambda (item)
+         (format "~/.emacs.d/elpa/%s" item))
+       (-filter
+        (lambda (item) (s-contains? "theme" item))
+        (directory-files "~/.emacs.d/elpa/")))
+    (lambda (item)
+      (add-to-list 'custom-theme-load-path item)))
 
-(add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
+  (add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
 
 #+END_SRC
 
@@ -109,39 +109,39 @@
 *** General Transparency function
 #+BEGIN_SRC emacs-lisp
 ;; Set transparency of emacs
- (defun transparency (value)
-   "Sets the transparency of the frame window. 0=transparent/100=opaque"
-   (interactive "nTransparency Value 0 - 100 opaque:")
-   (set-frame-parameter (selected-frame) 'alpha value))
+(defun transparency (value)
+"Sets the transparency of the frame window. 0=transparent/100=opaque"
+(interactive "nTransparency Value 0 - 100 opaque:")
+(set-frame-parameter (selected-frame) 'alpha value))
 #+END_SRC emacs-lisp
 *** Default Transparency
 #+BEGIN_SRC emacs-lisp
 ;;(set-frame-parameter (selected-frame) 'alpha '(<active> . <inactive>))
 ;;(set-frame-parameter (selected-frame) 'alpha <both>)
- (set-frame-parameter (selected-frame) 'alpha '(85 . 50))
- (add-to-list 'default-frame-alist '(alpha . (85 . 50)))
+(set-frame-parameter (selected-frame) 'alpha '(85 . 50))
+(add-to-list 'default-frame-alist '(alpha . (85 . 50)))
 #+END_SRC emacs-lisp
 *** Toggle script
 #+BEGIN_SRC emacs-lisp
 (defun toggle-transparency ()
-   (interactive)
-   (let ((alpha (frame-parameter nil 'alpha)))
-     (set-frame-parameter
-      nil 'alpha
-      (if (eql (cond ((numberp alpha) alpha)
-                     ((numberp (cdr alpha)) (cdr alpha))
-                     ;; Also handle undocumented (<active> <inactive>) form.
-                     ((numberp (cadr alpha)) (cadr alpha)))
-               100)
+(interactive)
+(let ((alpha (frame-parameter nil 'alpha)))
+(set-frame-parameter
+nil 'alpha
+(if (eql (cond ((numberp alpha) alpha)
+((numberp (cdr alpha)) (cdr alpha))
+;; Also handle undocumented (<active> <inactive>) form.
+((numberp (cadr alpha)) (cadr alpha)))
+     100)
           '(85 . 50) '(100 . 100)))))
- (global-set-key (kbd "C-c t") 'toggle-transparency)
-#+END_SRC emacs-lisp
+          (global-set-key (kbd "C-c t") 'toggle-transparency)
+          #+END_SRC emacs-lisp
 
 ** Font: Default Hack
 #+BEGIN_SRC emacs-lisp
-    ;; Use hack
-    (when (eq system-type 'darwin)
-      (set-default-font "-*-Hack-normal-normal-normal-*-12-*-*-*-m-0-iso10646-1"))
+  ;; Use hack
+  (when (eq system-type 'darwin)
+    (set-default-font "-*-Hack-normal-normal-normal-*-12-*-*-*-m-0-iso10646-1"))
   ;; Use all the icons for nicer icons. Useful in NeoTree
   (use-package all-the-icons :ensure t)
   ;; (set-fontset-font t 'unicode (font-spec :family "all-the-icons") nil 'append)
@@ -149,7 +149,7 @@
 
 ** Highlight cursor
 #+BEGIN_SRC emacs-lisp
-(global-hl-line-mode +1)
+  (global-hl-line-mode +1)
 #+END_SRC
 
 
@@ -157,49 +157,79 @@
 * General Packages
 ** Diminish: Can be instead of require (or in use-package) to hide modes fron the modeline
 #+BEGIN_SRC emacs-lisp
-(use-package diminish :ensure t)
+  (use-package diminish :ensure t)
 #+END_SRC
 ** Yasnippet: templating commonly used text
 #+BEGIN_SRC emacs-lisp
-(use-package yasnippet :ensure t)
+  (use-package yasnippet :ensure t)
+  (yas-global-mode 1)
+#+END_SRC
+*** Popup menu
+#+BEGIN_SRC emacs-lisp
+  ;;; use popup menu for yas-choose-value
+  (use-package popup :ensure t)
+
+  ;; add some shotcuts in popup menu mode
+  (define-key popup-menu-keymap (kbd "M-n") 'popup-next)
+  (define-key popup-menu-keymap (kbd "TAB") 'popup-next)
+  (define-key popup-menu-keymap (kbd "<tab>") 'popup-next)
+  (define-key popup-menu-keymap (kbd "<backtab>") 'popup-previous)
+  (define-key popup-menu-keymap (kbd "M-p") 'popup-previous)
+
+  (defun yas-popup-isearch-prompt (prompt choices &optional display-fn)
+    (when (featurep 'popup)
+      (popup-menu*
+       (mapcar
+        (lambda (choice)
+          (popup-make-item
+           (or (and display-fn (funcall display-fn choice))
+               choice)
+           :value choice))
+        choices)
+       :prompt prompt
+       ;; start isearch mode immediately
+       :isearch t
+       )))
+
+  (setq yas-prompt-functions '(yas-popup-isearch-prompt yas-maybe-ido-prompt yas-completing-prompt yas-no-prompt))
 #+END_SRC
 ** Bind-key: Used in use-package :bind keyword)
 #+BEGIN_SRC emacs-lisp
-(use-package bind-key :ensure t)
+  (use-package bind-key :ensure t)
 #+END_SRC
 ** eshell: used as default shell (integrates with emacs better than default)
 #+BEGIN_SRC emacs-lisp
-(use-package eshell :ensure t
-  :bind ("C-x C-u" . eshell))
+  (use-package eshell :ensure t
+    :bind ("C-x C-u" . eshell))
 
-(defun eshell-clear-buffer ()
-  "Clear terminal"
-  (interactive)
-  (let ((inhibit-read-only t))
-    (erase-buffer)
-    (eshell-send-input)))
-(add-hook 'eshell-mode-hook
-      '(lambda()
-          (local-set-key (kbd "C-l") 'eshell-clear-buffer)))
+  (defun eshell-clear-buffer ()
+    "Clear terminal"
+    (interactive)
+    (let ((inhibit-read-only t))
+      (erase-buffer)
+      (eshell-send-input)))
+  (add-hook 'eshell-mode-hook
+            '(lambda()
+               (local-set-key (kbd "C-l") 'eshell-clear-buffer)))
 
 #+END_SRC
 ** git-timemachine: View previous git commit in a buffer
 #+BEGIN_SRC emacs-lisp
-(use-package git-timemachine :ensure t)
+  (use-package git-timemachine :ensure t)
 #+END_SRC
 ** magit: Use emacs for managing commits and statuses
 #+BEGIN_SRC emacs-lisp
-(use-package magit :ensure t)
+  (use-package magit :ensure t)
 #+END_SRC
 ** Undo-tree: Visualization for the Emacs undo tree
 #+BEGIN_SRC emacs-lisp
-(use-package undo-tree
-  :ensure t
-  :diminish undo-tree-mode
-  :init
-  (global-undo-tree-mode)
-  (setq undo-tree-visualizer-timestamps t)
-  (setq undo-tree-visualizer-diff t))
+  (use-package undo-tree
+    :ensure t
+    :diminish undo-tree-mode
+    :init
+    (global-undo-tree-mode)
+    (setq undo-tree-visualizer-timestamps t)
+    (setq undo-tree-visualizer-diff t))
 #+END_SRC
 
 ** Helm: File navigation and search.  Integration with projectile for project management.
@@ -275,16 +305,17 @@
     :config
     (setq projectile-remember-window-configs t)
     (setq projectile-completion-system 'helm)
-    (setq projectile-switch-project-action 'helm-projectile))
+    (setq projectile-switch-project-action 'helm-projectile)
+    (add-to-list 'projectile-globally-ignored-directories ".ccls-cache"))
 #+END_SRC
 
 ** Which-key: Help for key combinations
 #+BEGIN_SRC emacs-lisp
   (use-package which-key
-      :ensure t
-      :diminish which-key-mode
-      :config
-      (which-key-mode))
+    :ensure t
+    :diminish which-key-mode
+    :config
+    (which-key-mode))
 #+END_SRC
 
 ** Lang-tool for checking grammar
@@ -319,22 +350,44 @@
     (eyebrowse-mode t))
 #+END_SRC
 
-** Neotree
+** SSH
 #+BEGIN_SRC emacs-lisp
-(use-package neotree :ensure t)
-(setq neo-theme (if (display-graphic-p) 'icons 'arrow))
+  (use-package ssh :ensure t)
+  (add-hook 'ssh-mode-hook
+            (lambda ()
+              (setq ssh-directory-tracking-mode t)
+              (shell-dirtrack-mode t)
+              (setq dirtrackp nil)))
+#+END_SRC
+
+** Spotify
+#+BEGIN_SRC emacs-lisp
+  (use-package helm-spotify-plus :ensure t)
+  (global-set-key (kbd "C-c s s") 'helm-spotify-plus)  ;; s for SEARCH
+  (global-set-key (kbd "C-c s f") 'helm-spotify-plus-next)
+  (global-set-key (kbd "C-c s b") 'helm-spotify-plus-previous)
+  ;; (global-set-key (kbd "C-c s p") 'helm-spotify-plus-play)
+  (global-set-key (kbd "C-c s p") 'helm-spotify-plus-toggle-play-pause)
+  ;; (global-set-key (kbd "C-c s g") 'helm-spotify-plus-pause) ;; g cause you know.. C-g stop things :)
+#+END_SRC
+
+** Ace Window
+#+BEGIN_SRC emacs-lisp
+  (use-package ace-window :ensure t)
+  (global-set-key (kbd "C-x o") 'ace-window)
+  (global-set-key (kbd "M-o") 'other-window)
 #+END_SRC
 
 
 * Programming Configurations
 ** Code folding using Origami
 #+BEGIN_SRC emacs-lisp
-(use-package origami :ensure t
-  :bind (("C-c f o"   . origami-open-node-recursively))
-  :bind (("C-c f t"   . origami-recursively-toggle-node))
-  :bind (("C-c f c"   . origami-close-node-recursively))
-  :bind (("C-c f a c"   . origami-close-all-nodes))
-  :bind (("C-c f a o"   . origami-open-all-nodes)))
+  (use-package origami :ensure t
+    :bind (("C-c f o"   . origami-open-node-recursively))
+    :bind (("C-c f t"   . origami-recursively-toggle-node))
+    :bind (("C-c f c"   . origami-close-node-recursively))
+    :bind (("C-c f a c"   . origami-close-all-nodes))
+    :bind (("C-c f a o"   . origami-open-all-nodes)))
 #+END_SRC
 ** Clang format function: Use clang format on save to format file
 #+BEGIN_SRC emacs-lisp
@@ -347,217 +400,268 @@
 ** Compilation Configurationfunctions
 *** Compilation Buffer Options
 #+BEGIN_SRC emacs-lisp
-(setq compilation-scroll-output 1) ;; automatically scroll the compilation window
-(setq compilation-window-height 5) ;; Set the compilation window height
+  (setq compilation-scroll-output 1) ;; automatically scroll the compilation window
+  (setq compilation-window-height 5) ;; Set the compilation window height
 #+END_SRC
 
 *** Closest Pathname defun: Iterates up directory tree until it finds the first makefile
 #+BEGIN_SRC emacs-lisp
-(require 'cl)
-(defun* get-closest-pathname (&optional (file "Makefile"))
-  "This function walks up the current path until it finds Makefile and then retu
-rns the path to it."
-  (let ((root (expand-file-name "/")))
-    (setq location (loop
-                    for d = default-directory then (expand-file-name ".." d)
-                    if (file-exists-p (expand-file-name file d))
-                    return d
-                    if (equal d root)
-                    return nil))
-    (if (eq location nil)
-        location
-      (expand-file-name file location))))
+  (require 'cl)
+  (defun* get-closest-pathname (&optional (file "Makefile"))
+    "This function walks up the current path until it finds Makefile and then retu
+  rns the path to it."
+    (let ((root (expand-file-name "/")))
+      (setq location (loop
+                      for d = default-directory then (expand-file-name ".." d)
+                      if (file-exists-p (expand-file-name file d))
+                      return d
+                      if (equal d root)
+                      return nil))
+      (if (eq location nil)
+          location
+        (expand-file-name file location))))
 #+END_SRC
 
 *** Compilation finish messages: Sets message for compilation buffer and dimsisses window if error-free
 #+BEGIN_SRC emacs-lisp
-(setq compilation-finish-function ;; Auto-dismiss compilation buffer.
-      (lambda (buf str)
-        (if (string-match "exited abnormally" str)
-            (message "compilation errors, press F9 to visit")
-          ;;no errors, make the compilation window go away after 2.5 sec
-          (message "No compilation errors!"))))
-#+END_SRC
-
-*** C/C++ Compilation Defuns
-#+BEGIN_SRC emacs-lisp
-(defun my-compile-func-debug ()
-  "This function does a compile."
-  (interactive)
-  (let ((dir (get-closest-pathname)))
-    (if (eq dir nil)
-        (progn
-          (setq compile-command "g++ *.c *.cpp")
-          (call-interactively 'compile))
-      (compile (format "cd %s; make -j 11" (file-name-directory (get-closest-pathname)))))))
-
-(defun my-compile-func-release ()
-  "This function does a compile."
-  (interactive)
-  (let ((dir (get-closest-pathname)))
-    (if (eq dir nil)
-        (progn
-          (setq compile-command "g++ *.c *.cpp")
-          (call-interactively 'compile))
-      (compile (format "cd %s; make -j 11 config=release" (file-name-directory (get-closest-pathname)))))))
-
-(defun my-compile-func-clean-release ()
-  "This function does a clean compile."
-  (interactive)
-  (compile (format "cd %s; make clean config=release" (file-name-directory (get-closest-pathname)))))
-
-(defun my-compile-func-clean-debug ()
-  "This function does a clean compile."
-  (interactive)
-  (compile (format "cd %s; make clean config=debug" (file-name-directory (get-closest-pathname)))))
-
-(defun my-compile-func-tests ()
-  "This function does a clean compile."
-  (interactive)
-  (compile (format "cd %s; make config=gtests -j 11" (file-name-directory (get-closest-pathname)))))
+  (setq compilation-finish-function ;; Auto-dismiss compilation buffer.
+        (lambda (buf str)
+          (if (string-match "exited abnormally" str)
+              (message "compilation errors, press F9 to visit")
+            ;;no errors, make the compilation window go away after 2.5 sec
+            (message "No compilation errors!"))))
 #+END_SRC
 
 ** Fic-mode: Highlights TODO, FIXME, BUG, and KLUDGE in buffer
 #+BEGIN_SRC emacs-lisp
-(use-package fic-mode :ensure t)
+  (use-package fic-mode :ensure t)
 #+END_SRC
 
-** Irony: Replaces CEDET to add inline compilation errors and code completion
+*** LSP-Mode
+#+BEGIN_SRC emacs-lisp
+  (use-package lsp-mode
+    :ensure t
+    :pin melpa
+    :config
+    (require 'lsp-clients)
+    (setq lsp-auto-guess-root t)
+    (setq lsp-prefer-flymake nil)
+    (setq lsp-report-if-no-buffer t)
+    (setq lsp-enable-file-watchers t)
+    (add-hook 'c++-mode-hook 'flycheck-mode)
+    (add-hook 'c-mode-hook 'flycheck-mode)
+    (setq lsp-ui-sideline-enable nil)
+    (setq lsp-ui-doc-enable nil)
+
+    :hook
+    ((c-mode c++-mode) . lsp)
+
+    :commands lsp)
+
+  (use-package lsp-ui  :ensure t :commands lsp-ui-mode)
+  (use-package company-lsp :ensure t :commands company-lsp)
+  (use-package helm-lsp :ensure t :commands helm-lsp-workspace-symbol)
+  (use-package lsp-treemacs :ensure t :commands lsp-treemacs-errors-list)
+
+  ;; optionally if you want to use debugger
+  (use-package dap-mode :ensure t
+    :config
+    (dap-mode 1)
+    (dap-ui-mode 1)
+    (require 'dap-gdb-lldb))
+
+  (add-hook 'c++-mode-hook #'lsp)
+  (add-hook 'c-mode-hook #'lsp)
+  (require 'lsp)
+  (require 'lsp-clients)
+
+  (use-package ccls
+    :ensure t
+    :hook ((c-mode c++-mode objc-mode) .
+           (lambda () (require 'ccls) (lsp)))
+    :config
+    (setq ccls-executable "/usr/local/bin/ccls"))
+
+  ;;Some helpers for CCLS
+  (defun ccls/callee () (interactive) (lsp-ui-peek-find-custom "$ccls/call" '(:callee t)))
+  (defun ccls/caller () (interactive) (lsp-ui-peek-find-custom "$ccls/call"))
+  (defun ccls/vars (kind) (lsp-ui-peek-find-custom "$ccls/vars" `(:kind ,kind)))
+  (defun ccls/base (levels) (lsp-ui-peek-find-custom "$ccls/inheritance" `(:levels ,levels)))
+  (defun ccls/derived (levels) (lsp-ui-peek-find-custom "$ccls/inheritance" `(:levels ,levels :derived t)))
+  (defun ccls/member (kind) (interactive) (lsp-ui-peek-find-custom "$ccls/member" `(:kind ,kind)))
+
+  ;; References w/ Role::Role
+  (defun ccls/references-read () (interactive)
+         (lsp-ui-peek-find-custom "textDocument/references"
+                                  (plist-put (lsp--text-document-position-params) :role 8)))
+
+  ;; References w/ Role::Write
+  (defun ccls/references-write ()
+    (interactive)
+    (lsp-ui-peek-find-custom "textDocument/references"
+                             (plist-put (lsp--text-document-position-params) :role 16)))
+
+  ;; References w/ Role::Dynamic bit (macro expansions)
+  (defun ccls/references-macro () (interactive)
+         (lsp-ui-peek-find-custom "textDocument/references"
+                                  (plist-put (lsp--text-document-position-params) :role 64)))
+
+  ;; References w/o Role::Call bit (e.g. where functions are taken addresses)
+  (defun ccls/references-not-call () (interactive)
+         (lsp-ui-peek-find-custom "textDocument/references"
+                                  (plist-put (lsp--text-document-position-params) :excludeRole 32)))
+
+  ;; Updates the imenu automatically whenever a new c++ buffer is visited
+  ;; (defun update-lsp-ui-imenu ()
+  ;;   (when (eq major-mode 'c++-mode)
+  ;;     (let ((curr-buffer (current-buffer)))
+  ;;       (lsp-ui-imenu)
+  ;;       (switch-to-buffer curr-buffer))))
+
+  ;; ;;Doesn't always get added or something clears it.  May need to evaluate directly.
+  ;; (add-hook 'post-command-hook 'update-lsp-ui-imenu)
+
+   (setq my-code-lens-state t)
+   (defun toggle-code-lens ()
+    (interactive)
+    (if my-code-lens-state
+        (progn
+          (ccls-clear-code-lens)
+          (setq my-code-lens-state nil))
+      (progn
+        (ccls-request-code-lens)
+        (setq my-code-lens-state t))))
+
+  (use-package hydra
+    :ensure t)
+
+  (defhydra hydra-c++-ide (:color blue)
+    "
+            ^Compilation Commands^                       ^Code View^
+            ^^^^^^^^-----------------------------------------------------------------
+            _c c_: Current Project Balanced              _;_: Auto-Complete
+            _c d_: Current Project Debug                 _d_: Show documentation
+            _c C-c C-c_: Current Project Clean           _n_: Next instance of symbol
+            _w_ : Update Wormhole/Blackhole libraries    _p_: Prev instance of symbol
+            ^ ^                                          _w_: Callers of function
+            ^ ^                                          _l_: Toggle code lens
+            "
+
+    ("c c" premake-project-compile-balanced)
+    ("c d" premake-project-compile-debug)
+    ("c C-c C-c" premake-project-clean-all)
+
+    ("w" wormhole-blackhole-update-libraries)
+
+    (";" company-complete-common)
+    ("d" lsp-ui-doc-show)
+    ("n" lsp-ui-find-next-reference)
+    ("p" lsp-ui-find-prev-reference)
+    ("w" ccls/caller)
+    ("l" toggle-code-lens))
+
+
+  (define-key c++-mode-map (kbd "C-;") 'hydra-c++-ide/body)
+
+#+END_SRC
 *** Flycheck - Compiles on save.  Navigate errors with F8 and F9.
 #+BEGIN_SRC emacs-lisp
-(use-package flycheck
-  :ensure t
-  :commands global-flycheck-mode
-  :bind (("<f9>" . flycheck-next-error)
-         ("<f8>" . flycheck-previous-error))
+  (use-package flycheck
+    :ensure t
+    :commands global-flycheck-mode
+    :bind (("<f9>" . flycheck-next-error)
+           ("<f8>" . flycheck-previous-error))
 
 
-  :config
-  (use-package flycheck-pos-tip :ensure t :config (flycheck-pos-tip-mode))
-  (setq flycheck-check-syntax-automatically '(save mode-enabled))
-  (setq flycheck-standard-error-navigation nil)
-  ;; flycheck errors on a tooltip (doesnt work on console)
-  (when (display-graphic-p (selected-frame))
-    (eval-after-load 'flycheck
-      '(custom-set-variables
-        '(flycheck-display-errors-function #'flycheck-pos-tip-error-messages)))
-    ))
+    :config
+    (use-package flycheck-pos-tip :ensure t :config (flycheck-pos-tip-mode))
+    (setq flycheck-check-syntax-automatically '(save mode-enabled))
+    (setq flycheck-standard-error-navigation nil)
+    ;; flycheck errors on a tooltip (doesnt work on console)
+    (when (display-graphic-p (selected-frame))
+      (eval-after-load 'flycheck
+        '(custom-set-variables
+          '(flycheck-display-errors-function #'flycheck-pos-tip-error-messages)))
+      ))
+
 #+END_SRC
-*** Irony - Code completion and compilation checking backend.
-#+BEGIN_SRC emacs-lisp
-(use-package irony
-  :ensure t
-  :diminish irony-mode
-  :defer t
-  :init
-  :config (progn
-            ;; replace the `completion-at-point' and `complete-symbol' bindings in
-            ;; irony-mode's buffers by irony-mode's function
-            (defun my-irony-mode-hook ()
-              (define-key irony-mode-map [remap completion-at-point]
-                'irony-completion-at-point-async)
-              (define-key irony-mode-map [remap complete-symbol]
-                'irony-completion-at-point-async))
-                                        ;(irony-eldoc 1))
-            (add-hook 'irony-mode-hook 'my-irony-mode-hook)
-            (add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options)
 
-            (eval-after-load 'flycheck
-              '(add-hook 'flycheck-mode-hook #'flycheck-irony-setup)))
-#+END_SRC
 *** Company mode - Code completion front end.  Use C-; to complete at cursor.
 #+BEGIN_SRC emacs-lisp
-(use-package company
-  :ensure t
-  :diminish company-mode
-  :defer t
-  :init (add-hook 'after-init-hook 'global-company-mode)
-  :config
-  (use-package company-irony :ensure t :defer t)
-  (use-package company-c-headers :ensure t :defer t)
-  (setq company-idle-delay              5
-        company-minimum-prefix-length   2
-        company-show-numbers            t
-        company-tooltip-limit           40
-        company-dabbrev-downcase        nil
-        company-backends                '((company-irony))
-        )
-  :bind ("C-;" . company-complete-common))
+  (use-package company
+    :ensure t
+    :diminish company-mode
+    :defer t
+    :init (add-hook 'after-init-hook 'global-company-mode)
+    :config
+    (use-package company-c-headers :ensure t :defer t)
+    (setq company-idle-delay              5
+          company-minimum-prefix-length   2
+          company-show-numbers            t
+          company-tooltip-limit           40
+          company-dabbrev-downcase        nil
+          company-backends                '((company-lsp))
+          )
+    :bind ("C-;" . company-complete-common))
 #+END_SRC
 
 ** C
 *** Add hooks for fic-mode (for TODO, FIXME, BUG, and KLUDGE highlighting)
 #+BEGIN_SRC emacs-lisp
-(add-hook 'c-mode-hook #'fic-mode)
-(add-hook 'c-mode-hook 'irony-mode)
+  (add-hook 'c-mode-hook #'fic-mode)
 #+END_SRC
 
 *** Indentation and Formatting
 #+BEGIN_SRC emacs-lisp
-(setq c-default-style "linux" c-basic-offset 4)
-(c-set-offset 'inline-open 0)
-(add-hook 'c-mode-hook
-          (function (lambda ()
-                      (setq defun-block-intro 0)
-                      (local-set-key (kbd "<f4>") 'my-compile-func-tests)
-                      (local-set-key (kbd "<f5>") 'my-compile-func-debug)
-                      (local-set-key (kbd "<f6>") 'my-compile-func-release)
-                      (setq indent-tabs-mode t)
-                      (toggle-truncate-lines 1)
-                      (setq c-indent-level 4)
-                      (linum-mode 1))))
+  (setq c-default-style "linux" c-basic-offset 4)
+  (c-set-offset 'inline-open 0)
 #+END_SRC
 
 ** C++
 *** Indentation and Formatting
 #+BEGIN_SRC emacs-lisp
- (add-to-list 'auto-mode-alist '("\\.h\\'" . c++-mode))
- (add-hook 'c++-mode-hook
-           (function (lambda ()
-                       (display-line-numbers-mode 1)
-                       (toggle-truncate-lines 1)
-                       (setq indent-tabs-mode t)
-                       (setq defun-block-intro 0)
-                       (setq auto-hscroll-mode 'current-line)
-                       (setq c-indent-level 4))))
+  (add-hook 'c++-mode-hook 'lsp-mode)
+  (add-to-list 'auto-mode-alist '("\\.h\\'" . c++-mode))
+  (add-hook 'c++-mode-hook
+            (function (lambda ()
+                        (display-line-numbers-mode 1)
+                        (toggle-truncate-lines 1)
+                        (setq indent-tabs-mode t)
+                        (setq defun-block-intro 0)
+                        (setq auto-hscroll-mode 'current-line)
+                        (setq c-indent-level 4))))
 #+END_SRC
 *** Clang-format: A package for running clang-format on buffers
 #+BEGIN_SRC emacs-lisp
-(use-package clang-format :ensure t)
+  (use-package clang-format :ensure t)
 #+END_SRC
 *** Add hooks for fic-mode (for TODO, FIXME, BUG, and KLUDGE highlighting)
 #+BEGIN_SRC emacs-lisp
-(add-hook 'c++-mode-hook #'fic-mode)
-#+END_SRC
-*** Add hooks for irony, company, and flycheck
-#+BEGIN_SRC emacs-lisp
-(add-hook 'c++-mode-hook 'irony-mode)
-(add-hook 'c++-mode-hook 'company-mode)
-(add-hook 'c++-mode-hook 'flycheck-mode)
+  (add-hook 'c++-mode-hook #'fic-mode)
 #+END_SRC
 
 *** Add hook for code folding
 #+BEGIN_SRC emacs-lisp
-  (add-hook 'c++-mode-hook 'origami-mode))
+  (add-hook 'c++-mode-hook 'origami-mode)
 #+END_SRC
 *** C++11/17 keyword updates
 #+BEGIN_SRC emacs-lisp
-(use-package modern-cpp-font-lock
-:ensure t
-:init
-(add-hook 'c++-mode-hook #'modern-c++-font-lock-mode))
+  (use-package modern-cpp-font-lock
+    :ensure t
+    :init
+    (add-hook 'c++-mode-hook #'modern-c++-font-lock-mode))
 #+END_SRC
 
 *** Compilation commands with Premake base (common)
 #+BEGIN_SRC emacs-lisp
   (defun premake-func ()
-    (format "cd %s; cd config; ./premake5 gmake2" (projectile-project-root)))
+    (format "cd %s; cd config; ./premake5 gmake2 --libxml2-include=/usr/local/opt/libxml2/include/libxml2/ --libxml2-lib=/usr/local/opt/libxml2/lib" (projectile-project-root)))
 
-  (defun compile-func (proj config cores)
-    "Generic build function for stampede"
+  (defun compile-func (config cores)
+    "Generic build function"
     (interactive)
-    (setq compile-command (format "%s; cd %s; cd config; cd build; cd gmake2; make %s config=%s -j%s"
-                                  (premake-func) (projectile-project-root) proj config cores))
+    (setq compile-command (format "%s; cd %s; cd config; cd build; cd gmake2; make config=%s -j%s"
+                                  (premake-func) (projectile-project-root) config cores))
     (compile compile-command))
 
   (defun compile-func-interactive (proj config cores)
@@ -569,179 +673,77 @@ rns the path to it."
       (read-string "Number of cores: ")))
     (stampede-compile-func proj config cores))
 #+END_SRC
-*** C/C++ Compilation Defuns for Stampede
+*** C/C++ Compilation Defuns
 #+BEGIN_SRC emacs-lisp
-  (defun stampede-compile-func-interactive ()
-    (compile-func-interactive "Stampede" "balanced" "11"))
-
-  (defun stampede-compile-balanced ()
-    "Compiles stampede in release mode."
+  (defun premake-project-compile-balanced ()
+    "Compile a premake-based project in balanced mode"
     (interactive)
-    (compile-func "Stampede" "balanced" "11"))
+    (compile-func "balanced" "11"))
 
-  (defun stampede-compile-tests ()
-    "Compiles unit tests."
+  (defun premake-project-compile-debug ()
+    "Compile a premake based project in debug mode"
     (interactive)
-    (compile-func "StampedeUnitTests" "debug" "11")
-    (compile-func "StampedeIntegrationTests" "debug" "11"))
+    (compile-func "debug" "11"))
 
-  (defun stampede-compile-debug ()
-    "Compiles unit tests."
+  (defun premake-buffer-with-options (compile-options)
     (interactive)
-    (compile-func "Stampede" "debug" "11"))
+    (compile (concat "g++ -c -o /tmp/tmpobject.o " compile-options " " (buffer-file-name))))
 
-  (defun stampede-clean-all ()
+  (defun premake-project-compile-clean-all ()
     "Runs make clean in the specified directory"
     (interactive)
     (if (yes-or-no-p "Are you sure you want to clean all?")
         (progn
-          (setq compile-command (format "cd %s; cd config; cd build/gmake2; make clean" makefile-dir))
+          (setq compile-command (format "cd %s; cd config; cd build/gmake2; make clean" (projectile-project-root)))
           (compile compile-command))))
-
-  (add-hook 'c++-mode-hook
-            (function (lambda ()
-                        (local-set-key (kbd "<f3> t") 'stampede-compile-tests)
-                        (local-set-key (kbd "<f3> d") 'stampede-compile-debug)
-                        (local-set-key (kbd "<f3> r") 'stampede-compile-balanced)
-                        (local-set-key (kbd "<f3> i") 'stampede-compile-func-interactive)
-                        (local-set-key (kbd "<f3> c") 'clean-all))))
 #+END_SRC
-*** C/C++ Compilation Defuns for Stardust
+*** Wormhole/Blackhole Specifics
 #+BEGIN_SRC emacs-lisp
-    (defun stardust-compile-func-interactive ()
-      (compile-func-interactive "Stardust" "balanced" "11"))
-
-    (defun stardust-compile-balanced ()
-      "Compiles stardust in release mode."
-      (interactive)
-      (compile-func "Stardust" "balanced" "11"))
-
-    (defun stardust-compile-tests ()
-      "Compiles unit tests."
-      (interactive)
-      (compile-func "StardustUnitTests" "debug" "11")
-      (compile-func "StardustIntegrationTests" "debug" "11"))
-
-    (defun stardust-compile-debug ()
-      "Compiles unit tests."
-      (interactive)
-      (compile-func "Stardust" "debug" "11"))
-
-    (defun stardust-clean-all ()
-      "Runs make clean in the specified directory"
-      (interactive)
-      (if (yes-or-no-p "Are you sure you want to clean all?")
-          (progn
-            (setq compile-command (format "cd %s; cd config; cd build/gmake2; make clean" makefile-dir))
-            (compile compile-command))))
-
-    (add-hook 'c++-mode-hook
-              (function (lambda ()
-                          (local-set-key (kbd "<f4> t") 'stardust-compile-tests)
-                          (local-set-key (kbd "<f4> d") 'stardust-compile-debug)
-                          (local-set-key (kbd "<f4> r") 'stardust-compile-balanced)
-                          (local-set-key (kbd "<f4> i") 'stardust-compile-func-interactive)
-                          (local-set-key (kbd "<f4> c") 'stardust-clean-all))))
-#+END_SRC
-*** C/C++ Compilation Defuns for Blackhole
-#+BEGIN_SRC emacs-lisp
-    (defun blackhole-compile-func-interactive ()
-      (compile-func-interactive "Blackhole" "balanced" "11"))
-
-    (defun blackhole-compile-balanced ()
-      "Compiles blackhole in release mode."
-      (interactive)
-      (compile-func "Blackhole" "balanced" "11"))
-
-    (defun blackhole-compile-tests ()
-      "Compiles unit tests."
-      (interactive)
-      (compile-func "" "debug" "11"))
-
-
-    (defun blackhole-compile-debug ()
-      "Compiles unit tests."
-      (interactive)
-      (compile-func "Blackhole" "debug" "11"))
-
-    (defun blackhole-clean-all ()
-      "Runs make clean in the specified directory"
-      (interactive)
-      (if (yes-or-no-p "Are you sure you want to clean all?")
-          (progn
-            (setq compile-command (format "cd %s; cd config; cd build/gmake2; make clean" makefile-dir))
-            (compile compile-command))))
-
-    (add-hook 'c++-mode-hook
-              (function (lambda ()
-                          (local-set-key (kbd "<f5> t") 'blackhole-compile-tests)
-                          (local-set-key (kbd "<f5> d") 'blackhole-compile-debug)
-                          (local-set-key (kbd "<f5> r") 'blackhole-compile-balanced)
-                          (local-set-key (kbd "<f5> i") 'blackhole-compile-func-interactive)
-                          (local-set-key (kbd "<f5> c") 'blackhole-clean-all))))
-#+END_SRC
-*** C/C++ Compilation Defuns for Wormhole
-#+BEGIN_SRC emacs-lisp
-  (defun wormhole-compile-func-interactive ()
-    (compile-func-interactive "Wormhole" "balanced" "11"))
-
-  (defun wormhole-compile-balanced ()
-    "Compiles wormhole in release mode."
+  (defun wormhole-blackhole-update-libraries ()
     (interactive)
-    (compile-func "Wormhole" "balanced" "11"))
+    (start-process-shell-command "Update Libraries" "update-libraries"
+                                 (concat "cp -r /Users/ihowell/Projects/stardust/include /Users/ihowell/Projects/blackhole/lib/stardust;"
+                                         "cp -r /Users/ihowell/Projects/stardust/src /Users/ihowell/Projects/blackhole/lib/stardust;"
+                                         "cp -r /Users/ihowell/Projects/stardust/include /Users/ihowell/Projects/wormhole/lib/stardust;"
+                                         "cp -r /Users/ihowell/Projects/stardust/src /Users/ihowell/Projects/wormhole/lib/stardust;"
+                                         "cp -r /Users/ihowell/Projects/blackhole/include /Users/ihowell/Projects/wormhole/lib/blackhole;"
+                                         "cp -r /Users/ihowell/Projects/blackhole/src /Users/ihowell/Projects/wormhole/lib/blackhole")))
 
-  (defun wormhole-compile-unit-tests ()
-    "Compiles unit tests."
-    (interactive)
-    (compile-func "WormholeUnitTests" "debug" "11"))
-
-  (defun wormhole-compile-debug ()
-    "Compiles unit tests."
-    (interactive)
-    (compile-func "Wormhole" "debug" "11"))
-
-  (defun wormhole-clean-all ()
-    "Runs make clean in the specified directory"
-    (interactive)
-    (if (yes-or-no-p "Are you sure you want to clean all?")
-        (progn
-          (setq compile-command (format "cd %s; cd config; cd build/gmake2; make clean" makefile-dir))
-          (compile compile-command))))
-
-  (add-hook 'c++-mode-hook
-            (function (lambda ()
-                        (local-set-key (kbd "<f6> u") 'wormhole-compile-unit-tests)
-                        (local-set-key (kbd "<f6> d") 'wormhole-compile-debug)
-                        (local-set-key (kbd "<f6> r") 'wormhole-compile-balanced)
-                        (local-set-key (kbd "<f6> i") 'wormhole-compile-func-interactive)
-                        (local-set-key (kbd "<f6> c") 'wormhole-clean-all))))
-#+END_SRC
-** QML
-*** Show line numbers
-#+BEGIN_SRC emacs-lisp
-  (use-package qml-mode :ensure t)
-  (add-hook 'qml-mode-hook
-            (function (lambda ()
-                        (linum-mode 1))))
 #+END_SRC
 ** Lua
 *** Enable lua mode
 #+BEGIN_SRC emacs-lisp
-(use-package lua-mode :ensure t)
+  (use-package lua-mode :ensure t)
 #+END_SRC
 ** Python
+*** Pyvenv
+#+BEGIN_SRC emacs-lisp
+  (use-package pyvenv :ensure t)
+#+END_SRC
 *** Elpy
 #+BEGIN_SRC emacs-lisp
-  (use-package elpy :ensure t)
-  (elpy-enable)
-  ;; Set the interactive python shell to use jupyter
-  (setq python-shell-interpreter "jupyter"
-        python-shell-interpreter-args "console --simple-prompt"
-        python-shell-prompt-detect-failure-warning nil)
-  (add-to-list 'python-shell-completion-native-disabled-interpreters
-               "jupyter")
+    (use-package elpy :ensure t)
+    (elpy-enable)
 
+    (add-hook 'elpy-mode-hook (lambda () (highlight-indentation-mode -1)))
+    (exec-path-from-shell-copy-env "PYTHONPATH")
+
+    ;; Set the interactive python shell to use jupyter
+    (setq python-shell-interpreter "jupyter"
+          python-shell-interpreter-args "console --simple-prompt"
+          python-shell-prompt-detect-failure-warning nil)
+    (add-to-list 'python-shell-completion-native-disabled-interpreters
+                 "jupyter")
+
+    (when (require 'flycheck nil t)
+      (setq elpy-modules (delq 'elpy-module-flymake elpy-modules))
+      (add-hook 'elpy-mode-hook 'flycheck-mode))
+
+  (define-key elpy-mode-map (kbd "C-c C-p") 'projectile-command-map)
+
+    ;; (add-hook 'elpy-mode-hook '(lambda () (define-key projectile-mode-map (kbd "C-c C-p") 'projectile-command-map)))
 #+END_SRC
+
 *** yapf format function: Use yapf format on save to format file
 #+BEGIN_SRC emacs-lisp
   (defun yapf-format-before-save ()
@@ -749,6 +751,7 @@ rns the path to it."
     (when (eq major-mode 'python-mode) (elpy-yapf-fix-code)))
   (add-hook 'before-save-hook 'yapf-format-before-save)
 #+END_SRC
+
 *** Indentation
 #+BEGIN_SRC emacs-lisp
   ;; (add-hook 'python-mode-hook
@@ -756,16 +759,12 @@ rns the path to it."
   ;;   (setq indent-tabs-mode nil)
   ;;   (setq tab-width (default-value 'tab-width))))
 #+END_SRC
-** QML
-*** QML Mode
-#+BEGIN_SRC emacs-lisp
-(use-package qml-mode)
-#+END_SRC
+
 ** HTML
 *** Web mode
 #+BEGIN_SRC emacs-lisp
-(add-to-list 'auto-mode-alist '("\\.html\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.php\\'" . web-mode))
+  (add-to-list 'auto-mode-alist '("\\.html\\'" . web-mode))
+  (add-to-list 'auto-mode-alist '("\\.php\\'" . web-mode))
 #+END_SRC
 
 ** Javascript
@@ -797,8 +796,8 @@ rns the path to it."
   (setq-default flycheck-disabled-checkers
                 (append flycheck-disabled-checkers
                         '(javascript-jshint)))
- (flycheck-add-mode 'javascript-eslint 'web-mode)
- (flycheck-add-mode 'javascript-eslint 'js2-mode)
+  (flycheck-add-mode 'javascript-eslint 'web-mode)
+  (flycheck-add-mode 'javascript-eslint 'js2-mode)
 #+END_SRC
 *** Only need for OSX
 #+BEGIN_SRC emacs-lisp
@@ -809,33 +808,33 @@ rns the path to it."
 ** JSON
 *** JSON Mode
 #+BEGIN_SRC emacs-lisp
-(use-package json-mode :ensure t)
+  (use-package json-mode :ensure t)
 #+END_SRC
 ** Groovy
 *** Grovy mode and imports
 #+BEGIN_SRC emacs-lisp
-(use-package groovy-imports :ensure t)
-(use-package groovy-mode :ensure t)
+  (use-package groovy-imports :ensure t)
+  (use-package groovy-mode :ensure t)
 #+END_SRC
 ** Markdown
 *** Markdown mode
 #+BEGIN_SRC emacs-lisp
-(use-package markdown-mode :ensure t)
+  (use-package markdown-mode :ensure t)
 #+END_SRC
 
 
 * Global Key Binds
 ** Change suspend to C-z C-z in terminal, and disable completely for GUI
 #+BEGIN_SRC emacs-lisp
-(global-unset-key (kbd "C-z"))
-(global-set-key (kbd "C-z C-z") 'my-suspend-frame)
+  (global-unset-key (kbd "C-z"))
+  (global-set-key (kbd "C-z C-z") 'my-suspend-frame)
 
-(defun my-suspend-frame ()
-  "In a GUI environment, do nothing; otherwise `suspend-frame'."
-  (interactive)
-  (if (display-graphic-p)
-      (message "suspend-frame disabled for graphical displays.")
-    (suspend-frame)))
+  (defun my-suspend-frame ()
+    "In a GUI environment, do nothing; otherwise `suspend-frame'."
+    (interactive)
+    (if (display-graphic-p)
+        (message "suspend-frame disabled for graphical displays.")
+      (suspend-frame)))
 #+END_SRC
 ** Use <F1> to find manually entries
 #+BEGIN_SRC emacs-lisp
@@ -845,24 +844,24 @@ rns the path to it."
 #+END_SRC
 ** Use <F7> to enter magit-status screen for buffers under git control
 #+BEGIN_SRC emacs-lisp
-(global-set-key (kbd "<f7>") 'magit-status)
+  (global-set-key (kbd "<f7>") 'magit-status)
 #+END_SRC
 ** Use C-+ and C-- to enlarge or shrink font size
 #+BEGIN_SRC emacs-lisp
-(define-key global-map (kbd "C-+") 'text-scale-increase)
-(define-key global-map (kbd "C--") 'text-scale-decrease)
+  (define-key global-map (kbd "C-+") 'text-scale-increase)
+  (define-key global-map (kbd "C--") 'text-scale-decrease)
 #+END_SRC
 ** Use <F11> to toggle full screen mode
 #+BEGIN_SRC emacs-lisp
-(defun toggle-fullscreen (&optional f)
-  (interactive)
-  (let ((current-value (frame-parameter nil 'fullscreen)))
-    (set-frame-parameter nil 'fullscreen
-      (if (equal 'fullboth current-value)
-    (if (boundp 'old-fullscreen) old-fullscreen nil)
-    (progn (setq old-fullscreen current-value)
-      'fullboth)))))
-      (global-set-key [f11] 'toggle-fullscreen)
+  (defun toggle-fullscreen (&optional f)
+    (interactive)
+    (let ((current-value (frame-parameter nil 'fullscreen)))
+      (set-frame-parameter nil 'fullscreen
+                           (if (equal 'fullboth current-value)
+                               (if (boundp 'old-fullscreen) old-fullscreen nil)
+                             (progn (setq old-fullscreen current-value)
+                                    'fullboth)))))
+  (global-set-key [f11] 'toggle-fullscreen)
 #+END_SRC
 ** Disable C-xC-c (usually quits emacs).  Issue kill command through M-x.
 #+BEGIN_SRC emacs-lisp
@@ -878,21 +877,21 @@ rns the path to it."
 * Save Options
 ** Create the autosave dir if necessary
 #+BEGIN_SRC emacs-lisp
-(make-directory (expand-file-name "~/.emacs.d/autosaves/") t)
+  (make-directory (expand-file-name "~/.emacs.d/autosaves/") t)
 #+END_SRC
 ** Force backups and autosaves into the autosave directory
 #+BEGIN_SRC emacs-lisp
-(setq backup-by-copying t      ; don't clobber symlinks
-      backup-directory-alist '(("." . "~/.emacs.d/autosaves/"))    ; don't litter my fs tree
-      delete-old-versions t
-      kept-new-versions 6
-      kept-old-versions 2
-      version-control t)       ; use versioned backups
-(setq auto-save-file-name-transforms `((".*" "~/.emacs.d/autosaves/" t)))
+  (setq backup-by-copying t      ; don't clobber symlinks
+        backup-directory-alist '(("." . "~/.emacs.d/autosaves/"))    ; don't litter my fs tree
+        delete-old-versions t
+        kept-new-versions 6
+        kept-old-versions 2
+        version-control t)       ; use versioned backups
+  (setq auto-save-file-name-transforms `((".*" "~/.emacs.d/autosaves/" t)))
 #+END_SRC
 ** Remove extraneous whitespace from files on save
 #+BEGIN_SRC emacs-lisp
-(add-hook 'before-save-hook 'whitespace-cleanup)
+  (add-hook 'before-save-hook 'whitespace-cleanup)
 #+END_SRC
 
 
@@ -1015,44 +1014,44 @@ rns the path to it."
 * Miscellaneous Options
 ** Revert buffers automatically if changed by outside emacs
 #+BEGIN_SRC emacs-lisp
-(global-auto-revert-mode t)
+  (global-auto-revert-mode t)
 #+END_SRC
 ** Automatically encrypt and decrypt files with .gpg extension
 #+BEGIN_SRC emacs-lisp
-(setq epa-file-name-regexp "\\.gpg\\(~\\|\\.~[0-9]+~\\)?\\'\\|\\.asc")
+  (setq epa-file-name-regexp "\\.gpg\\(~\\|\\.~[0-9]+~\\)?\\'\\|\\.asc")
 #+END_SRC
 ** Completely disable bell
 #+BEGIN_SRC emacs-lisp
-(setq ring-bell-function 'ignore)
+  (setq ring-bell-function 'ignore)
 #+END_SRC
 ** Necessary for emacsclient.  Reloads theme in new frames.
 #+BEGIN_SRC emacs-lisp
-(if (daemonp)
-  (add-hook 'after-make-frame-functions
-    (lambda (frame)
-    (with-selected-frame frame
-    (load-theme current-theme t))))
-  (load-theme current-theme t))
+  (if (daemonp)
+      (add-hook 'after-make-frame-functions
+                (lambda (frame)
+                  (with-selected-frame frame
+                    (load-theme current-theme t))))
+    (load-theme current-theme t))
 #+END_SRC
 
 ** Move custom options from .emacs file to .custom.el
 #+BEGIN_SRC emacs-lisp
-(setq custom-file "~/.emacs.d/custom.el")
+  (setq custom-file "~/.emacs.d/custom.el")
 #+END_SRC
 ** Agenda mode customizations
 #+BEGIN_SRC emacs-lisp
-    ;; (setq inhibit-splash-screen t)
-    (setq org-agenda-files '("~/Nextcloud/org/"))
-    (define-key global-map "\C-cl" 'org-store-link)
-    (define-key global-map "\C-ca" 'org-agenda)
-    ;; (add-hook 'after-init-hook '(lambda ()
-    ;;                               (org-agenda-todo)
-    ;;                              (delete-other-windows)))
+  ;; (setq inhibit-splash-screen t)
+  (setq org-agenda-files '("~/Nextcloud/org/"))
+  (define-key global-map "\C-cl" 'org-store-link)
+  (define-key global-map "\C-ca" 'org-agenda)
+  ;; (add-hook 'after-init-hook '(lambda ()
+  ;;                               (org-agenda-todo)
+  ;;                              (delete-other-windows)))
   (global-set-key (kbd "C-c M-a") (lambda () (interactive) (find-file "~/Nextcloud/org/work.org")))
 #+END_SRC
 ** Kill other buffers
 #+BEGIN_SRC emacs-lisp
-(defun kill-other-buffers ()
+  (defun kill-other-buffers ()
     "Kill all other buffers."
     (interactive)
     (mapc 'kill-buffer

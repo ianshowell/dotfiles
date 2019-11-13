@@ -27,7 +27,7 @@ alias crane="ssh ihowell@crane.unl.edu"
 alias zebra="ssh ihowell@cse-dgeschwe-01.unl.edu"
 alias consystlab="ssh consystlab@cse.unl.edu"
 alias sudoku="ssh sudoku@cse.unl.edu"
-alias private="ssh ian@www.ihowell.info"
+alias private="ssh ian@www.ihowell.dev"
 
 alias ll="ls -lh"
 alias la="ls -alh"

@@ -867,6 +867,12 @@ nil 'alpha
   (use-package markdown-mode :ensure t)
 #+END_SRC
 
+** Rest Client Server Testing
+*** Rest client
+#+BEGIN_SRC emacs-lisp
+(use-package restclient :ensure t)
+(use-package restclient-helm :ensure t)
+#+END_SRC
 
 * Global Key Binds
 ** Change suspend to C-z C-z in terminal, and disable completely for GUI

@@ -739,7 +739,9 @@ nil 'alpha
     :init (elpy-enable))
 
   (add-hook 'elpy-mode-hook (lambda () (highlight-indentation-mode -1)))
-  (exec-path-from-shell-copy-env "PYTHONPATH")
+  (if (eq system-type 'darwin)
+    (progn
+      (exec-path-from-shell-copy-env "PYTHONPATH")))
 
   ;; Set the interactive python shell to use jupyter
   (setq python-shell-interpreter "jupyter"
